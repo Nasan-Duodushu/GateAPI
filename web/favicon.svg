@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Background: dark rounded square -->
+  <rect width="32" height="32" rx="4" fill="#1a1a2e"/>
+  <!-- Door frame (stone gray) -->
+  <rect x="6" y="4" width="20" height="24" fill="#3a3a50"/>
+  <!-- Door left half (wood brown) -->
+  <rect x="8" y="6" width="8" height="20" fill="#6c3b1e"/>
+  <!-- Door right half -->
+  <rect x="16" y="6" width="8" height="20" fill="#5c3018"/>
+  <!-- Door seam -->
+  <rect x="15" y="6" width="2" height="20" fill="#3a1a08"/>
+  <!-- Door inner panels left -->
+  <rect x="9" y="8" width="6" height="7" fill="none" stroke="#8a5530" stroke-width="1"/>
+  <rect x="9" y="17" width="6" height="7" fill="none" stroke="#8a5530" stroke-width="1"/>
+  <!-- Door inner panels right -->
+  <rect x="17" y="8" width="6" height="7" fill="none" stroke="#8a5530" stroke-width="1"/>
+  <rect x="17" y="17" width="6" height="7" fill="none" stroke="#8a5530" stroke-width="1"/>
+  <!-- Knob left -->
+  <rect x="13" y="15" width="2" height="2" fill="#c9a030"/>
+  <!-- Knob right -->
+  <rect x="17" y="15" width="2" height="2" fill="#c9a030"/>
+  <!-- Keyhole -->
+  <rect x="15" y="17" width="2" height="3" fill="#0a0a14"/>
+  <!-- Top arch stone -->
+  <rect x="8" y="4" width="16" height="2" fill="#4a4a60"/>
+  <!-- Floor -->
+  <rect x="6" y="26" width="20" height="2" fill="#4a4a4a"/>
+  <!-- Green glow dot (status light) -->
+  <circle cx="16" cy="30" r="1" fill="#92cc41"/>
+</svg>

@@ -1,0 +1,33 @@
+{
+  "server": {
+    "port": 3000,
+    "adminToken": "admin123",
+    "apiKeys": ["sk-gateapi-change-me"],
+    "githubRepo": "Nasan-Duodushu/GateAPI"
+  },
+  "relay": {
+    "timeout": 60000,
+    "retryTimes": 2,
+    "retryOnStatusCodes": [429, 500, 502, 503]
+  },
+  "detect": {
+    "mode": "quick",
+    "autoOnAdd": true,
+    "sampleRate": 0,
+    "cronIntervalHours": 0
+  },
+  "channels": [
+    {
+      "id": 1,
+      "name": "Example Provider",
+      "type": "openai",
+      "endpoint": "https://api.openai.com/v1",
+      "keys": ["sk-your-key-here"],
+      "models": ["gpt-4o", "gpt-4o-mini"],
+      "modelMapping": {},
+      "weight": 10,
+      "priority": 1,
+      "status": "enabled"
+    }
+  ]
+}

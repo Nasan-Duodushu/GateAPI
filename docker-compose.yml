@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  gateapi:
+    build: .
+    container_name: gateapi
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - NODE_ENV=production

@@ -1,0 +1,2448 @@
+<!DOCTYPE html>
+<html lang="zh" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GateAPI</title>
+<link rel="icon" type="image/jpeg" href="/favicon.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,510;14..32,600;14..32,700&family=Press+Start+2P&family=DotGothic16&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwindcss.config={darkMode:'class',theme:{extend:{colors:{bg0:'#0a0a0f',bg1:'#111118',bg2:'#1a1a2e',bg3:'#252540',accent:'#6366f1',accent2:'#818cf8',green:'#22c55e',red:'#ef4444',amber:'#f59e0b'}}}}</script>
+<style>
+  :root{
+    --bg:#0a0a0f;--bg1:#111118;--bg2:#1a1a2e;--bg3:#252540;--bg-sidebar:#0d0d14;--bg-input:#0d0d15;
+    --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--text4:#475569;
+    --border:#1e1e35;--border2:#141420;--border-hover:#2d2d50;
+    --accent:#6366f1;--accent2:#a5b4fc;--accent-bg:#1e1b4b;
+  }
+  [data-theme="light"]{
+    --bg:#f8f9fb;--bg1:#ffffff;--bg2:#f1f2f6;--bg3:#e4e5eb;--bg-sidebar:#ffffff;--bg-input:#f5f5f8;
+    --text:#1a1a2e;--text2:#4a4a68;--text3:#6b7280;--text4:#9ca3af;
+    --border:#e5e7eb;--border2:#f0f0f4;--border-hover:#d1d5db;
+    --accent:#6366f1;--accent2:#4f46e5;--accent-bg:#eef2ff;
+  }
+  *{box-sizing:border-box;}
+  body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);margin:0;}
+  .card{background:var(--bg1);border:1px solid var(--border);border-radius:14px;padding:20px;transition:all .3s cubic-bezier(0.2, 0.8, 0.2, 1);box-shadow:0 4px 20px rgba(0,0,0,.03);}
+  .card:hover{border-color:var(--accent2);transform:translateY(-2px);box-shadow:0 12px 30px rgba(99,102,241,.08);}
+  .btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s cubic-bezier(0.2, 0.8, 0.2, 1);border:none;display:inline-flex;align-items:center;gap:6px;}
+  .btn-primary{background:linear-gradient(135deg,var(--accent) 0%,#4f46e5 100%);color:#fff;box-shadow:0 4px 12px rgba(99,102,241,.25);}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(99,102,241,.4);}
+  .btn-primary:active{transform:translateY(1px);box-shadow:0 2px 8px rgba(99,102,241,.3);}
+  .btn-danger{background:linear-gradient(135deg,#ef4444 0%,#dc2626 100%);color:#fff;box-shadow:0 4px 12px rgba(239,68,68,.2);}
+  .btn-danger:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(239,68,68,.3);}
+  .btn-success{background:linear-gradient(135deg,#10b981 0%,#059669 100%);color:#fff;box-shadow:0 4px 12px rgba(16,185,129,.2);}
+  .btn-success:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(16,185,129,.3);}
+  .btn-outline{background:transparent;color:var(--text);border:1px solid var(--border);}.btn-outline:hover{background:var(--bg2);border-color:var(--text3);transform:translateY(-1px);}
+  .btn-sm{padding:5px 12px;font-size:12px;border-radius:6px;}
+  .btn-xs{padding:4px 10px;font-size:11px;border-radius:6px;}
+  .btn-ghost{background:transparent;color:var(--text2);border:none;}.btn-ghost:hover{color:var(--text);background:var(--bg2);}
+  input,select,textarea{background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);width:100%;font-size:13px;transition:all .2s;}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);background:var(--bg1);box-shadow:0 0 0 3px rgba(99,102,241,.15);}
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;letter-spacing:.02em;}
+  .badge-green{background:rgba(34,197,94,.1);color:#16a34a;}
+  .badge-red{background:rgba(239,68,68,.1);color:#dc2626;}
+  .badge-amber{background:rgba(245,158,11,.1);color:#d97706;}
+  .badge-blue{background:rgba(59,130,246,.1);color:#2563eb;}
+  .badge-purple{background:rgba(139,92,246,.1);color:#7c3aed;}
+  table{width:100%;border-collapse:collapse;}
+  th{text-align:left;padding:10px 14px;color:var(--text3);font-size:11px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);font-weight:600;}
+  td{padding:12px 14px;border-bottom:1px solid var(--border2);font-size:13px;transition:background .2s;}
+  tr:hover td{background:var(--bg2);}
+  .stat-card{background:var(--bg1);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden;transition:all .3s cubic-bezier(0.2,0.8,0.2,1);box-shadow:0 4px 20px rgba(0,0,0,.03);}
+  .stat-card:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(99,102,241,.08);border-color:var(--accent2);}
+  .stat-card::after{content:'';position:absolute;top:-20px;right:-20px;width:100px;height:100px;background:radial-gradient(circle, var(--accent) 0%, transparent 70%);opacity:.05;border-radius:50%;}
+  .stat-num{font-size:30px;font-weight:800;line-height:1.2;letter-spacing:-0.02em;color:var(--text);}
+  .stat-label{font-size:13px;color:var(--text3);margin-top:4px;font-weight:600;}
+  .stat-sub{font-size:12px;color:var(--text4);margin-top:4px;font-family:'Inter',monospace;}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:50;animation:fadeIn .2s ease-out;}
+  .modal{background:var(--bg1);border:1px solid var(--border);border-radius:16px;padding:28px;width:580px;max-width:92vw;max-height:88vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.15);animation:scaleIn .3s cubic-bezier(0.2,0.8,0.2,1);}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes scaleIn{from{transform:scale(.95) translateY(10px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+  @keyframes spinSlow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+  .animate-spin-slow{animation:spinSlow 1.5s linear infinite;display:inline-block;}
+  .sidebar{width:220px;min-height:100vh;background:var(--bg-sidebar);border-right:1px solid var(--border);padding:20px 12px;position:fixed;left:0;top:0;z-index:10;display:flex;flex-direction:column;gap:4px;}
+  .sidebar-item{display:flex;align-items:center;gap:10px;padding:10px 14px;color:var(--text2);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;border-radius:8px;}
+  .sidebar-item:hover{color:var(--accent);background:var(--bg2);}
+  .sidebar-item.active{color:var(--accent);background:var(--accent-bg);font-weight:600;box-shadow:inset 0 0 0 1px rgba(99,102,241,.1);}
+  .sidebar-item svg{width:18px;height:18px;flex-shrink:0;transition:transform .2s;}
+  .sidebar-item:hover svg{transform:scale(1.1);}
+  .main-content{margin-left:220px;min-height:100vh;padding-bottom:40px;}
+  .progress-bar{height:6px;background:var(--bg2);border-radius:3px;overflow:hidden;}
+  .progress-fill{height:100%;border-radius:3px;transition:width .3s;}
+  .toast{position:fixed;top:20px;right:20px;padding:14px 22px;border-radius:12px;color:#fff;font-size:13px;font-weight:500;z-index:100;animation:slideIn .3s;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+  @keyframes slideIn{from{transform:translateX(100px);opacity:0}to{transform:translateX(0);opacity:1}}
+  @media(max-width:768px){.sidebar{transform:translateX(-100%);transition:transform .2s;}.sidebar.open{transform:translateX(0);}.main-content{margin-left:0;}.mobile-header{display:flex !important;}}
+  .mobile-header{display:none;align-items:center;gap:12px;padding:12px 16px;background:var(--bg-sidebar);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:9;}
+  .mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9;}
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .glow-green{box-shadow:0 0 12px rgba(34,197,94,.15);}
+  .glow-red{box-shadow:0 0 12px rgba(239,68,68,.15);}
+  .glow-amber{box-shadow:0 0 12px rgba(245,158,11,.15);}
+  .toggle-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border:1px solid var(--border);border-radius:6px;font-size:11px;font-weight:510;color:var(--text3);background:transparent;cursor:pointer;transition:all .12s;outline:none;}
+  .toggle-btn:hover{color:var(--text);background:var(--bg2);}
+  .conn-result{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;font-size:13px;padding:8px 0;}
+  .conn-label{color:var(--text3);font-weight:510;text-align:right;}
+  .conn-value{color:var(--text);font-family:'Inter',monospace;}
+  .ch-card{background:var(--bg1);border:1px solid var(--border);border-radius:12px;transition:border-color .2s;overflow:hidden;}
+  .ch-card:hover{border-color:var(--border-hover);}
+  .ch-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;cursor:pointer;transition:background .1s;gap:12px;}
+  .ch-header:hover{background:var(--bg2);}
+  .ch-meta{display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
+  .ch-meta-name{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ch-meta-info{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .ch-meta-endpoint{font-family:'Inter',monospace;font-size:11px;color:var(--text3);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ch-actions{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+  .ch-body{display:none;border-top:1px solid var(--border);padding:0;}
+  .ch-body.open{display:block;}
+  .ch-stats{display:flex;gap:20px;padding:12px 20px;background:var(--bg);font-size:12px;color:var(--text3);border-bottom:1px solid var(--border);}
+  .ch-stats span{display:flex;align-items:center;gap:4px;}
+  .ch-model-row{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;border-bottom:1px solid var(--border2);transition:background .08s;gap:12px;}
+  .ch-model-row:last-child{border-bottom:none;}
+  .ch-model-row:hover{background:var(--bg2);}
+  .ch-model-name{font-family:'Inter',monospace;font-size:12px;font-weight:510;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ch-model-result{display:flex;align-items:center;gap:8px;font-size:12px;flex-shrink:0;}
+  .ch-expand{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:2px 6px;border-radius:4px;transition:all .15s;line-height:1;}
+  .ch-expand:hover{color:var(--text);background:var(--bg2);}
+  .ch-test-all{padding:12px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .mp-container{display:none;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;background:var(--bg1);}
+  .mp-list{max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:1px;scrollbar-width:thin;}
+  .mp-item{display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:5px;cursor:pointer;font-size:12px;font-family:'Inter',monospace;color:var(--text);transition:background .08s;user-select:none;}
+  .mp-item:hover{background:var(--bg2);}
+  .mp-item input[type="checkbox"]{accent-color:var(--accent);width:14px;height:14px;cursor:pointer;flex-shrink:0;}
+  /* ── Detection UI (model-detective style) ── */
+  .score-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 12px;border-radius:9999px;font-size:13px;font-weight:600;font-family:'Inter',monospace;border:1px solid;}
+  .score-high{color:#22c55e;border-color:rgba(34,197,94,.15);background:rgba(34,197,94,.04);}
+  .score-mid{color:#f59e0b;border-color:rgba(245,158,11,.15);background:rgba(245,158,11,.04);}
+  .score-low{color:#ef4444;border-color:rgba(239,68,68,.15);background:rgba(239,68,68,.04);}
+  .score-na{color:#64748b;border-color:rgba(100,116,139,.15);background:rgba(100,116,139,.06);}
+  .suspect-tag{display:inline-flex;align-items:center;gap:5px;padding:2px 10px;border-radius:4px;font-size:12px;font-family:'Inter',monospace;}
+  .suspect-match{background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.12);color:#22c55e;}
+  .suspect-mismatch{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.12);color:#ef4444;}
+  .detail-row{display:none;}
+  .detail-row.open{display:table-row;}
+  .detail-panel{padding:16px 20px;background:var(--bg);border-radius:10px;margin:4px 0;}
+  .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:12px;}
+  .detail-item{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);}
+  .detail-item:last-child{border-bottom:none;}
+  .detail-label{color:var(--text3);font-weight:510;}
+  .detail-value{font-family:'Inter',monospace;font-weight:510;}
+  .probe-pass{color:#22c55e;}.probe-fail{color:#ef4444;}.probe-warn{color:#f59e0b;}.probe-skip{color:#475569;}
+  .expand-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:4px;transition:all .12s;}
+  .expand-btn:hover{color:var(--text);background:var(--bg2);}
+  .chip{display:inline-flex;align-items:center;gap:5px;padding:2px 10px 2px 6px;border-radius:9999px;font-size:12px;font-weight:510;line-height:1.5;border:1px solid;}
+  .chip::before{content:'';width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+  .chip-pass{color:#22c55e;border-color:rgba(34,197,94,.15);background:rgba(34,197,94,.04);}.chip-pass::before{background:#22c55e;}
+  .chip-fail{color:#ef4444;border-color:rgba(239,68,68,.15);background:rgba(239,68,68,.04);}.chip-fail::before{background:#ef4444;}
+  .chip-warn{color:#f59e0b;border-color:rgba(245,158,11,.15);background:rgba(245,158,11,.04);}.chip-warn::before{background:#f59e0b;}
+  .chip-idle{color:#64748b;border-color:rgba(100,116,139,.12);background:transparent;}.chip-idle::before{background:#64748b;}
+  .spin{display:inline-block;width:12px;height:12px;border:2px solid var(--bg3);border-top-color:var(--accent);border-radius:50%;animation:spinAnim .6s linear infinite;flex-shrink:0;}
+  @keyframes spinAnim{to{transform:rotate(360deg);}}
+  .detect-progress{height:2px;background:var(--bg2);border-radius:1px;overflow:hidden;opacity:0;transition:opacity .2s;margin-top:12px;}
+  .detect-progress.on{opacity:1;}
+  .detect-progress-bar{height:100%;background:var(--accent);width:0%;transition:width .25s;}
+  ::-webkit-scrollbar{width:4px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:rgba(128,128,128,.2);border-radius:2px;}
+  @media(max-width:768px){.detail-grid{grid-template-columns:1fr;}}
+
+  /* ══ Bright High-Tech Clean Lab Portal ══ */
+  #loginScreen {
+    background: #f8fafc;
+    font-family: 'Inter', system-ui, sans-serif;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    user-select: none;
+  }
+  #loginScreen * { box-sizing: border-box; }
+
+  /* Blueprint Grid */
+  .crt-overlay {
+    position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    background-image: 
+      linear-gradient(to right, #e2e8f0 1px, transparent 1px),
+      linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-position: center;
+  }
+  .crt-overlay::after {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(circle at center, transparent 30%, #f8fafc 90%);
+  }
+
+  .gate-title {
+    text-align: center; margin-bottom: 60px; position: relative; z-index: 20;
+    animation: float 4s ease-in-out infinite alternate;
+  }
+  @keyframes float { 0% { transform: translateY(0); } 100% { transform: translateY(-8px); } }
+  .gate-title h1 {
+    font-size: 48px; color: #4f46e5; margin: 0 0 10px 0;
+    font-weight: 800;
+    letter-spacing: 6px;
+    text-shadow: 0 4px 20px rgba(79,70,229,0.2);
+  }
+  .gate-title p {
+    font-size: 13px; color: #64748b; margin: 0;
+    letter-spacing: 8px;
+    font-weight: 600;
+  }
+
+  .gate-wrapper {
+    position: relative;
+    width: 480px;
+    height: 380px;
+    perspective: 1200px;
+    z-index: 10;
+  }
+
+  /* Sleek Arch Frame */
+  .gate-arch {
+    position: absolute;
+    inset: -20px -30px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 24px 24px 0 0;
+    box-shadow: inset 0 0 0 10px #f8fafc, 0 30px 60px rgba(99,102,241,0.1);
+    z-index: 0;
+  }
+
+  /* The Sliding Door */
+  .gate-door {
+    position: absolute; inset: 0; z-index: 2;
+    display: flex;
+    border: 1px solid #cbd5e1;
+    background: #f1f5f9;
+    border-radius: 12px 12px 0 0;
+    overflow: hidden;
+  }
+  .door-half {
+    width: 50%; height: 100%; position: relative;
+    background: #ffffff;
+    transition: transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .door-left { transform-origin: left center; border-right: 2px solid #e2e8f0; }
+  .door-right { transform-origin: right center; border-left: 2px solid #e2e8f0; }
+
+  /* High-tech Door Details */
+  .door-half::before {
+    content: ''; position: absolute; top: 30px; bottom: 30px; left: 30px; right: 30px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.02);
+  }
+  .door-half::after {
+    content: ''; position: absolute; top: 50px; bottom: 50px; left: 50px; right: 50px;
+    background-image: repeating-linear-gradient(0deg, #e0e7ff 0, #e0e7ff 2px, transparent 2px, transparent 40px);
+    opacity: 0.5;
+  }
+  
+  /* Sliding */
+  .door-open .door-left { transform: translateX(-105%); }
+  .door-open .door-right { transform: translateX(105%); }
+
+  .gate-glow {
+    position: absolute; inset: 0; z-index: -1;
+    background: #ffffff;
+    border-radius: 12px 12px 0 0;
+    opacity: 0; transition: opacity 0.5s 0.2s;
+  }
+  .door-open .gate-glow { opacity: 1; animation: softGlow 1.5s infinite alternate ease-in-out; }
+  @keyframes softGlow { 0% { box-shadow: inset 0 0 40px #a5b4fc; } 100% { box-shadow: inset 0 0 80px #818cf8; } }
+
+  /* Modern Glass Terminal */
+  .gate-terminal {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    z-index: 10; width: 340px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid #e0e7ff;
+    border-radius: 16px;
+    padding: 32px 24px;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(79,70,229,0.15), inset 0 0 0 2px rgba(255,255,255,0.5);
+    transition: opacity 0.4s, transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .gate-terminal::before {
+    content: "SECURE ACCESS";
+    display: block; color: #4f46e5; font-size: 11px; margin-bottom: 24px;
+    letter-spacing: 4px; font-weight: 700;
+  }
+
+  .lcd {
+    background: #f8fafc; border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    height: 56px; display: flex; align-items: center; justify-content: center;
+    position: relative; cursor: text; margin-bottom: 24px;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.03);
+    transition: all 0.2s ease;
+  }
+  .lcd:focus-within {
+    border-color: #818cf8;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.03), 0 0 0 3px rgba(129,140,248,0.2);
+  }
+  
+  .lcd-input {
+    position: absolute !important; top:0 !important; left:0 !important; right:0 !important; bottom:0 !important; 
+    width: 100% !important; height: 100% !important;
+    opacity: 0 !important; cursor: text !important; z-index: 10 !important;
+    appearance: none !important; border: none !important; background: transparent !important; color: transparent !important; outline: none !important;
+    box-shadow: none !important; padding: 0 !important; margin: 0 !important;
+  }
+  .lcd-text {
+    color: #4f46e5; font-size: 24px; letter-spacing: 6px;
+    font-family: 'Inter', monospace; font-weight: 600;
+    position: relative; z-index: 1; pointer-events: none;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .lcd-cursor { 
+    display: inline-block; width: 2px; height: 24px; background: #4f46e5; 
+    margin-left: 4px; animation: curFade 1s infinite; border-radius: 2px;
+  }
+  @keyframes curFade { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  .unlock-btn {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); 
+    color: #ffffff; border: none;
+    width: 100%; padding: 14px 0; font-size: 14px; font-weight: 600; cursor: pointer;
+    text-transform: uppercase; letter-spacing: 3px;
+    border-radius: 10px;
+    box-shadow: 0 4px 14px rgba(79,70,229,0.3);
+    transition: all 0.2s ease;
+  }
+  .unlock-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(79,70,229,0.4);
+  }
+  .unlock-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 8px rgba(79,70,229,0.3);
+  }
+
+  /* States */
+  .lcd-err { border-color: #ef4444 !important; background: #fef2f2 !important; }
+  .lcd-err .lcd-text { color: #ef4444 !important; }
+  .lcd-shake { animation: smoothShake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+  .lcd-ok { border-color: #22c55e !important; background: #f0fdf4 !important; }
+  .lcd-ok .lcd-text { color: #22c55e !important; }
+  .lcd-ok .lcd-cursor { background: #22c55e !important; }
+
+  @keyframes smoothShake { 
+    10%, 90% { transform: translate3d(-2px, 0, 0); }
+    20%, 80% { transform: translate3d(4px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+    40%, 60% { transform: translate3d(6px, 0, 0); }
+  }
+
+  /* Clean Floor */
+  .gate-floor {
+    position: absolute; bottom: -60px; left: -150px; right: -150px; height: 100px;
+    background: #ffffff;
+    transform: perspective(400px) rotateX(70deg);
+    border-top: 1px solid #e2e8f0;
+    background-image: 
+      repeating-linear-gradient(90deg, transparent, transparent 58px, #f1f5f9 58px, #f1f5f9 60px),
+      repeating-linear-gradient(0deg, transparent, transparent 58px, #f1f5f9 58px, #f1f5f9 60px);
+    z-index: 1;
+    box-shadow: 0 -10px 30px rgba(99,102,241,0.05);
+  }
+
+  .px-ver { 
+    color: #94a3b8; font-size: 11px; margin-top: 80px; letter-spacing: 4px; 
+    position: relative; z-index: 20; font-weight: 500; font-family: 'Inter', monospace;
+  }
+  
+  .fade-overlay {
+    position: fixed; inset: 0; background: #ffffff;
+    z-index: 9999; opacity: 0; pointer-events: none;
+    transition: opacity 0.8s ease 0.6s;
+  }
+  .fade-overlay.on { opacity: 1; pointer-events: all; }
+
+  /* ── Protect main app from NES.css ── */
+  #mainApp input,#mainApp select,#mainApp textarea{
+    background:var(--bg-input)!important;border:1px solid var(--bg3)!important;border-radius:8px!important;
+    padding:9px 12px!important;color:var(--text)!important;width:100%!important;font-size:13px!important;
+    font-family:'Inter',system-ui,sans-serif!important;
+    image-rendering:auto!important;box-shadow:none!important;
+  }
+  #mainApp button{font-family:'Inter',system-ui,sans-serif!important;image-rendering:auto!important;}
+  #mainApp{font-family:'Inter',system-ui,sans-serif!important;}
+  #mainApp .card,#mainApp table,#mainApp th,#mainApp td{font-family:'Inter',system-ui,sans-serif!important;}
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="loginScreen">
+  <div class="crt-overlay"></div>
+  
+  <div class="gate-title">
+    <h1>GATEAPI</h1>
+    <p>LLM GATEWAY</p>
+  </div>
+
+  <div class="gate-wrapper">
+    <div class="gate-arch"></div>
+    <div class="gate-floor"></div>
+    
+    <div class="gate-door" id="doorBody">
+      <div class="gate-glow"></div>
+      <div class="door-half door-left"></div>
+      <div class="door-half door-right"></div>
+      
+      <div class="gate-terminal" id="lockPanel">
+        <div class="lcd" id="lcd" onclick="document.getElementById('tokenInput').focus()">
+          <input id="tokenInput" type="password" class="lcd-input" autocomplete="off" oninput="updateLcd()" onkeydown="if(event.key==='Enter')doLogin()">
+          <div class="lcd-text" id="lcdText"><span class="lcd-cursor">_</span></div>
+        </div>
+        <button class="unlock-btn" id="unlockBtn" onclick="doLogin()">UNLOCK</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="px-ver">v0.1.0 — VERIFY WHAT YOU PROXY</p>
+  <div class="fade-overlay" id="fadeOverlay"></div>
+</div>
+
+<!-- Main App -->
+<div id="mainApp" style="display:none;">
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="px-5 mb-6">
+      <div class="text-lg font-bold" style="color:#a5b4fc;">⬡ GateAPI</div>
+      <div class="text-xs mt-1 cursor-pointer hover:text-indigo-400 transition-colors" style="color:var(--text2);" id="sidebarVersion" onclick="openUpdateModal()" title="检查更新">v0.1.0 ⟳</div>
+    </div>
+    <div class="sidebar-item active" data-tab="dashboard" onclick="switchTab('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      仪表盘
+    </div>
+    <div class="sidebar-item" data-tab="channels" onclick="switchTab('channels')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      渠道
+    </div>
+    <div class="sidebar-item" data-tab="models" onclick="switchTab('models')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      模型
+    </div>
+    <div class="sidebar-item" data-tab="detect" onclick="switchTab('detect')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      检测
+    </div>
+    <div class="sidebar-item" data-tab="users" onclick="switchTab('users')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+      密钥
+    </div>
+    <div class="sidebar-item" data-tab="logs" onclick="switchTab('logs')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      日志
+    </div>
+    <div class="sidebar-item" data-tab="settings" onclick="openPasswordModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      系统设置
+    </div>
+    <div style="position:absolute;bottom:20px;left:0;right:0;padding:0 20px;">
+      <div class="flex gap-2 mb-3">
+        <button class="toggle-btn" id="themeToggle" onclick="toggleTheme()" style="flex:1;justify-content:center;">◐ Light</button>
+        <button class="toggle-btn" id="langToggle" onclick="toggleLang()" style="flex:1;justify-content:center;">EN</button>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="badge badge-green" id="healthBadge">Online</span>
+        <button class="btn btn-ghost btn-xs" id="btnLogout" onclick="doLogout()">退出</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Password Modal -->
+  <div class="modal-overlay" id="passwordModal" style="display:none;" onclick="if(event.target===this)closePasswordModal()">
+    <div class="modal" style="width:400px;">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold" id="pwdModalTitle">修改密码</h3>
+        <button class="btn btn-ghost btn-xs" onclick="closePasswordModal()">✕</button>
+      </div>
+      <div class="mb-3">
+        <label class="text-xs font-bold mb-1 block" style="color:var(--text2);" id="pwdOldLabel">当前密码</label>
+        <input type="password" id="pwdOldInput" class="input" placeholder="" style="width:100%;">
+      </div>
+      <div class="mb-3">
+        <label class="text-xs font-bold mb-1 block" style="color:var(--text2);" id="pwdNewLabel">新密码</label>
+        <input type="password" id="pwdNewInput" class="input" placeholder="" style="width:100%;">
+      </div>
+      <div class="mb-4">
+        <label class="text-xs font-bold mb-1 block" style="color:var(--text2);" id="pwdConfirmLabel">确认密码</label>
+        <input type="password" id="pwdConfirmInput" class="input" placeholder="" style="width:100%;">
+      </div>
+      <div id="pwdError" class="text-xs mb-3" style="color:#ef4444;display:none;"></div>
+      <button class="btn btn-primary" style="width:100%;" id="btnChangePwd" onclick="doChangePassword()">确认修改</button>
+    </div>
+  </div>
+
+  <!-- Update Modal -->
+  <div class="modal-overlay" id="updateModal" style="display:none;" onclick="if(event.target===this)closeUpdateModal()">
+    <div class="modal" style="width:420px;">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold" id="updateModalTitle">检查更新</h3>
+        <button class="btn btn-ghost btn-xs" onclick="closeUpdateModal()">✕</button>
+      </div>
+      <div id="updateContent">
+        <div class="text-center py-8" id="updateLoading">
+          <div class="text-2xl mb-2">⟳</div>
+          <div class="text-sm" style="color:var(--text2);">正在检查...</div>
+        </div>
+        <div id="updateResult" style="display:none;">
+          <div class="flex justify-between items-center py-2 px-3 rounded-lg mb-2" style="background:var(--bg2);">
+            <span class="text-sm" style="color:var(--text2);" id="updateCurrentLabel">当前版本</span>
+            <span class="text-sm font-mono font-bold" id="updateCurrentVer">-</span>
+          </div>
+          <div class="flex justify-between items-center py-2 px-3 rounded-lg mb-3" style="background:var(--bg2);">
+            <span class="text-sm" style="color:var(--text2);" id="updateLatestLabel">最新版本</span>
+            <span class="text-sm font-mono font-bold" id="updateLatestVer">-</span>
+          </div>
+          <div id="updateStatusMsg" class="text-center py-3 mb-3 rounded-lg text-sm font-medium" style="display:none;"></div>
+          <div id="updateChangelogWrap" style="display:none;" class="mb-3">
+            <div class="text-xs font-bold mb-1" style="color:var(--text2);" id="updateChangelogLabel">更新日志</div>
+            <div id="updateChangelogText" class="text-xs p-3 rounded-lg" style="background:var(--bg2);color:var(--text2);max-height:150px;overflow-y:auto;white-space:pre-wrap;"></div>
+          </div>
+          <div id="updateActions" class="flex gap-2" style="display:none;">
+            <button class="btn btn-primary" style="flex:1;" id="btnDoUpdate" onclick="doUpdate()">立即更新</button>
+          </div>
+        </div>
+        <div id="updateProgress" style="display:none;">
+          <div class="text-center py-6">
+            <div class="text-2xl mb-2 animate-spin-slow">⟳</div>
+            <div class="text-sm font-medium" id="updateProgressMsg">更新中...</div>
+            <div class="text-xs mt-2" style="color:var(--text2);" id="updateProgressDetail"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileNav()"></div>
+  <div class="main-content">
+    <div class="mobile-header">
+      <button class="btn btn-ghost btn-xs" onclick="openMobileNav()" style="font-size:18px;">☰</button>
+      <span class="text-sm font-bold" style="color:#a5b4fc;">⬡ GateAPI</span>
+    </div>
+    <!-- Dashboard Tab -->
+    <div id="tab-dashboard" class="p-6">
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-xl font-bold">仪表盘</h1>
+        <div class="text-xs text-gray-500" id="dashUpdateTime"></div>
+      </div>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="stat-card">
+          <div class="stat-label">请求总数 (24h)</div>
+          <div class="stat-num" id="statTotal">-</div>
+          <div class="stat-sub" id="statTokens"></div>
+        </div>
+        <div class="stat-card glow-green">
+          <div class="stat-label">成功</div>
+          <div class="stat-num" style="color:#22c55e;" id="statSuccess">-</div>
+          <div class="stat-sub" id="statSuccessRate"></div>
+        </div>
+        <div class="stat-card glow-red">
+          <div class="stat-label">失败</div>
+          <div class="stat-num" style="color:#ef4444;" id="statFailed">-</div>
+        </div>
+        <div class="stat-card glow-amber">
+          <div class="stat-label">平均延迟</div>
+          <div class="stat-num" style="color:#f59e0b;" id="statAvgMs">-</div>
+        </div>
+      </div>
+      <!-- Detection Health Overview -->
+      <div class="card mb-4" id="detectOverview" style="display:none;">
+        <div class="flex justify-between items-center mb-3">
+          <h3 class="text-sm font-semibold" style="color:var(--text3);">🛡️ <span id="detectOverviewTitle">渠道真实性检测</span></h3>
+          <button class="btn btn-ghost btn-xs" onclick="switchTab('detect')" id="detectOverviewLink">查看详情 →</button>
+        </div>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3" id="detectHealthCards"></div>
+        <div id="detectRiskList"></div>
+      </div>
+
+      <!-- Routing Engine Status -->
+      <div class="card mb-4" id="routingStatusCard" style="display:none;">
+        <div class="flex justify-between items-center mb-3">
+          <h3 class="text-sm font-semibold" style="color:var(--text3);">⚡ <span id="routingStatusTitle">路由引擎状态</span></h3>
+          <span class="text-xs" style="color:var(--text3);" id="routingStickyLabel">—</span>
+        </div>
+        <div id="routingChannelStats"></div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="card">
+          <h3 class="text-sm font-semibold" style="color:var(--text3);" class="mb-3">按模型统计 (24h)</h3>
+          <table><thead><tr><th>模型</th><th>请求</th><th>成功率</th><th>平均延迟</th></tr></thead><tbody id="statByModel"></tbody></table>
+        </div>
+        <div class="card">
+          <h3 class="text-sm font-semibold" style="color:var(--text3);" class="mb-3">按渠道统计 (24h)</h3>
+          <table><thead><tr><th>渠道</th><th>请求</th><th>成功率</th><th>平均延迟</th></tr></thead><tbody id="statByChannel"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Channels Tab -->
+    <div id="tab-channels" class="p-6" style="display:none;">
+      <div class="flex justify-between items-center mb-5">
+        <h1 class="text-xl font-bold" id="chMgmtTitle">Channel Management</h1>
+        <div class="flex gap-2">
+          <button class="btn btn-outline btn-sm" id="btnReloadCfg" onclick="reloadConfig()">Reload Config</button>
+          <button class="btn btn-primary btn-sm" id="btnAddCh" onclick="showAddChannel()">+ Add Channel</button>
+        </div>
+      </div>
+      <div id="channelList" class="space-y-3"></div>
+    </div>
+
+    <!-- Models Tab -->
+    <div id="tab-models" class="p-6" style="display:none;">
+      <div class="flex justify-between items-center mb-5">
+        <h1 class="text-xl font-bold" id="modelTabTitle">Aggregated Models</h1>
+        <button class="btn btn-outline btn-sm" id="btnAliasToggle" onclick="toggleAliasPanel()">🔗 <span id="aliasBtn">Alias</span></button>
+      </div>
+      <!-- Alias panel -->
+      <div id="aliasPanel" class="card mb-4">
+        <h3 class="text-sm font-semibold mb-3" style="color:var(--text3);">🔗 <span id="aliasPanelTitle">Model Alias Mapping</span></h3>
+        <p class="text-xs mb-3" style="color:var(--text3);" id="aliasDesc">Map different provider model names to a canonical name. Request the canonical name and GateAPI auto-matches channel variants.</p>
+        <div id="aliasRows"></div>
+        <div class="flex gap-2 mt-3">
+          <button class="btn btn-outline btn-sm" id="btnAddAlias" onclick="addAliasRow()">+ Add Alias</button>
+          <button class="btn btn-primary btn-sm" id="btnSaveAlias" onclick="saveAliases()">Save</button>
+        </div>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;"><div class="table-wrap">
+        <table>
+          <thead><tr><th id="thModelId">Model ID</th><th id="thAvailCh">Available Channels</th><th id="thChCount">Count</th></tr></thead>
+          <tbody id="modelList"></tbody>
+        </table>
+      </div></div>
+    </div>
+
+    <!-- Detect Tab -->
+    <div id="tab-detect" class="p-6" style="display:none;">
+      <div class="flex justify-between items-center mb-5">
+        <div>
+          <h1 class="text-xl font-bold" id="detectPageTitle">Model Authenticity Detection</h1>
+          <p class="text-xs text-gray-500 mt-1" id="detectPageDesc">Multi-probe automatic upstream model verification</p>
+          <p class="text-xs mt-1" style="color:var(--text3);opacity:0.6;max-width:600px;" id="detectDisclaimer">Detection results are for reference only. 100% accuracy cannot be guaranteed.</p>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn btn-outline btn-sm" onclick="toggleDetectSettings()">⚙️</button>
+          <button class="btn btn-outline btn-sm" id="btnDetectRefresh" onclick="loadDetectTab()">Refresh</button>
+          <button class="btn btn-primary btn-sm" id="btnDetectAll" onclick="detectAll()">Detect All</button>
+        </div>
+      </div>
+      <!-- Summary bar -->
+      <div id="detectSummaryBar" class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4" style="display:none;"></div>
+      <!-- Settings panel -->
+      <div id="detectSettingsPanel" class="card mb-4" style="display:none;">
+        <h3 class="text-sm font-semibold mb-3" style="color:var(--text3);">⚙️ <span id="detectSettingsTitle">Detection Settings</span></h3>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div>
+            <label class="text-xs" style="color:var(--text3);" id="lbl_sampleRate">Sample Rate</label>
+            <input id="cfg_sampleRate" type="number" step="0.01" min="0" max="1" placeholder="0 = 关闭" style="font-size:13px;">
+          </div>
+          <div>
+            <label class="text-xs" style="color:var(--text3);" id="lbl_cronInterval">Cron Interval (h)</label>
+            <input id="cfg_cronInterval" type="number" min="0" placeholder="0 = 关闭" style="font-size:13px;">
+          </div>
+          <div>
+            <label class="text-xs" style="color:var(--text3);" id="lbl_degradeThreshold">Degrade Threshold</label>
+            <input id="cfg_degradeThreshold" type="number" min="0" max="100" placeholder="0 = 关闭" style="font-size:13px;">
+          </div>
+          <div>
+            <label class="text-xs" style="color:var(--text3);" id="lbl_degradeAction">Degrade Action</label>
+            <select id="cfg_degradeAction" style="font-size:13px;">
+              <option value="weight" id="opt_degradeWeight">Lower Weight</option>
+              <option value="disable" id="opt_degradeDisable">Disable Channel</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm mt-3" id="btnSaveDetectCfg" onclick="saveDetectConfig()">Save</button>
+      </div>
+      <div class="detect-progress" id="detectProgress"><div class="detect-progress-bar" id="detectProgressBar"></div></div>
+      <div id="detectContent" class="mt-4 space-y-4"></div>
+    </div>
+
+    <!-- Keys Tab -->
+    <div id="tab-users" class="p-6" style="display:none;">
+      <div class="flex justify-between items-center mb-5">
+        <h1 class="text-xl font-bold" id="keyMgmtTitle">API Key Management</h1>
+        <button class="btn btn-primary btn-sm" id="btnAddKey" onclick="showAddKey()">+ New Key</button>
+      </div>
+      <div id="usersList"></div>
+    </div>
+
+    <!-- Logs Tab -->
+    <div id="tab-logs" class="p-6" style="display:none;">
+      <div class="flex justify-between items-center mb-5">
+        <h1 class="text-xl font-bold" id="logTitle">Request Logs</h1>
+        <button class="btn btn-outline btn-sm" id="btnLogRefresh" onclick="loadLogs()">Refresh</button>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;"><div class="table-wrap">
+        <table>
+          <thead><tr><th>时间</th><th>模型</th><th>渠道</th><th>状态码</th><th>延迟</th><th>Tokens</th><th>错误</th></tr></thead>
+          <tbody id="logList"></tbody>
+        </table>
+      </div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Container -->
+<div id="modalOverlay" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// i18n + Theme
+// ══════════════════════════════════════════
+const LANG = {
+  zh: {
+    login:'登录管理面板', tokenPlaceholder:'Admin Token', invalidToken:'Token 无效', connFail:'连接失败',
+    dashboard:'仪表盘', channels:'渠道', models:'模型', detect:'检测', users:'密钥', logs:'日志', logout:'退出',
+    req24h:'请求总数 (24h)', success:'成功', failed:'失败', avgLatency:'平均延迟',
+    successRate:'成功率', updatedAt:'更新于', byModel:'按模型统计 (24h)', byChannel:'按渠道统计 (24h)',
+    noData:'暂无数据', model:'模型', requests:'请求', latency:'平均延迟', channel:'渠道',
+    channelMgmt:'渠道管理', reloadConfig:'刷新配置', addChannel:'+ 添加渠道',
+    id:'ID', name:'名称', type:'类型', endpoint:'端点', modelCount:'模型', keys:'Keys', weight:'权重', priority:'优先级', status:'状态', actions:'操作',
+    test:'测试', detect2:'检测', edit:'编辑', delete:'删除', noChannels:'暂无渠道',
+    testAll:'全部测试', testModel:'测试', testing2:'测试中',
+    modelsCount:'个模型', keysCount:'个Key', weightLabel:'权重',
+    connHint:'建议先点击「全部测试」验证连通性，确认所有模型可用后再进行检测',
+    modelEnabled:'已启用', modelDisabled:'已停用', toggleEnable:'启用', toggleDisable:'停用',
+    testing:'测试中...', connOk:'连通性测试通过', connFailed:'连通性测试失败',
+    httpStatus:'HTTP 状态', respTime:'响应时间', reqModel:'请求模型', retModel:'返回模型', respContent:'响应内容', errorInfo:'错误信息',
+    modelList:'聚合模型列表', modelId:'模型 ID', availCh:'可用渠道', chCount:'渠道数', noModels:'暂无模型',
+    detectTitle:'模型真实功能性检测', detectDesc:'多维探针自动鉴别上游模型功能真伪', detectDisclaimer:'检测结果仅供参考，不代表最终结论。受网络环境、上游服务状态、模型版本迭代等因素影响，检测结果可能存在偏差，无法保证 100% 准确。', refresh:'刷新', detectAll:'检测全部渠道',
+    score:'得分', verdict:'检测结果', tier:'等级', family:'家族', time:'时间', notDetected:'未检测', detected:'已检测',
+    verdictPass:'达标', verdictWeak:'能力不足', verdictFamilyMismatch:'家族不匹配', verdictInsufficient:'证据不足',
+    detectAllModels:'检测全部模型', detecting:'检测中', detectStarted:'检测已启动...（每个模型约10-30秒）',
+    detectDone:'检测完成！', detectFailed:'检测失败', detectRunning:'检测正在进行中',
+    detectAllConfirm:'检测全部渠道？可能需要几分钟', detectAllStarted:'全量检测已启动...',
+    detectAllDone:'检测完成，正在刷新结果',
+    highConf:'高度可信', midConf:'存在疑点', lowConf:'能力偏低', noProbeData:'无探针数据',
+    userMgmt:'API 密钥管理', addUser:'+ 新建密钥', noUsers:'暂无密钥', createFirst:'创建第一个密钥',
+    reqLogs:'请求日志', time2:'时间', statusCode:'状态码', tokens:'Tokens', error:'错误', noLogs:'暂无日志',
+    configReloaded:'配置已重载',
+    themeLight:'Light', themeDark:'Dark',
+    detectHealth:'渠道功能性检测', viewDetail:'查看详情 →',
+    chTotal:'渠道总数', modelTotal:'模型总数', detectPass:'检测通过', detectRisk:'存在风险',
+    riskChannels:'风险渠道', riskDesc:'以下渠道检测得分偏低，可能存在模型替换',
+    avgScoreLabel:'平均得分', noDetectYet:'暂无检测数据，请先进行检测',
+    changePwd:'修改密码', oldPwd:'当前密码', newPwd:'新密码', confirmPwd:'确认密码', pwdSubmit:'确认修改', pwdMismatch:'两次密码不一致', pwdTooShort:'密码至少 6 位', pwdOldWrong:'当前密码错误', pwdSuccess:'密码修改成功，请重新登录', settings:'系统设置',
+    updateCheck:'检查更新', updateCurrent:'当前版本', updateLatest:'最新版本', updateAvailable:'发现新版本', updateUpToDate:'已是最新版本', updateNow:'立即更新', updateUpdating:'更新中...', updateSuccess:'更新成功，正在重启...', updateFailed:'更新失败', updateChangelog:'更新日志', updateNoRepo:'未配置 GitHub 仓库', updateReconnect:'服务重启中，正在重连...',
+  },
+  en: {
+    login:'Login', tokenPlaceholder:'Admin Token', invalidToken:'Invalid token', connFail:'Connection failed',
+    dashboard:'Dashboard', channels:'Channels', models:'Models', detect:'Detect', users:'Keys', logs:'Logs', logout:'Logout',
+    req24h:'Requests (24h)', success:'Success', failed:'Failed', avgLatency:'Avg Latency',
+    successRate:'success rate', updatedAt:'Updated at', byModel:'By Model (24h)', byChannel:'By Channel (24h)',
+    noData:'No data', model:'Model', requests:'Requests', latency:'Avg Latency', channel:'Channel',
+    channelMgmt:'Channel Management', reloadConfig:'Reload Config', addChannel:'+ Add Channel',
+    id:'ID', name:'Name', type:'Type', endpoint:'Endpoint', modelCount:'Models', keys:'Keys', weight:'Weight', priority:'Priority', status:'Status', actions:'Actions',
+    test:'Test', detect2:'Detect', edit:'Edit', delete:'Delete', noChannels:'No channels',
+    testAll:'Test All', testModel:'Test', testing2:'Testing',
+    modelsCount:'models', keysCount:'keys', weightLabel:'Weight',
+    connHint:'Tip: Click "Test All" to verify connectivity before running detection',
+    modelEnabled:'Enabled', modelDisabled:'Disabled', toggleEnable:'Enable', toggleDisable:'Disable',
+    testing:'Testing...', connOk:'Connectivity Test Passed', connFailed:'Connectivity Test Failed',
+    httpStatus:'HTTP Status', respTime:'Response Time', reqModel:'Request Model', retModel:'Returned Model', respContent:'Response', errorInfo:'Error',
+    modelList:'Aggregated Models', modelId:'Model ID', availCh:'Available Channels', chCount:'Count', noModels:'No models',
+    detectTitle:'Model Functional Authenticity Detection', detectDesc:'Multi-dimensional probes to verify upstream model functional authenticity', detectDisclaimer:'Detection results are for reference only and do not represent definitive conclusions. Results may vary due to network conditions, upstream service status, and model version updates. 100% accuracy cannot be guaranteed.', refresh:'Refresh', detectAll:'Detect All',
+    score:'Score', verdict:'Verdict', tier:'Tier', family:'Family', time:'Time', notDetected:'Not tested', detected:'detected',
+    verdictPass:'Pass', verdictWeak:'Below Standard', verdictFamilyMismatch:'Family Mismatch', verdictInsufficient:'Insufficient',
+    detectAllModels:'Detect All Models', detecting:'Detecting', detectStarted:'Detection started... (~10-30s per model)',
+    detectDone:'Detection complete!', detectFailed:'Detection failed', detectRunning:'Detection in progress',
+    detectAllConfirm:'Detect all channels? May take a few minutes', detectAllStarted:'Full detection started...',
+    detectAllDone:'Detection complete, refreshing results',
+    highConf:'High confidence', midConf:'Suspicious', lowConf:'Below standard', noProbeData:'No probe data',
+    userMgmt:'API Key Management', addUser:'+ New Key', noUsers:'No keys', createFirst:'Create first key',
+    reqLogs:'Request Logs', time2:'Time', statusCode:'Status', tokens:'Tokens', error:'Error', noLogs:'No logs',
+    configReloaded:'Config reloaded',
+    themeLight:'Light', themeDark:'Dark',
+    detectHealth:'Channel Functional Detection', viewDetail:'View Details →',
+    chTotal:'Channels', modelTotal:'Models', detectPass:'Verified', detectRisk:'At Risk',
+    riskChannels:'Risk Channels', riskDesc:'These channels scored low — possible model substitution',
+    avgScoreLabel:'Avg Score', noDetectYet:'No detection data yet. Run detection first.',
+    changePwd:'Change Password', oldPwd:'Current Password', newPwd:'New Password', confirmPwd:'Confirm Password', pwdSubmit:'Confirm', pwdMismatch:'Passwords do not match', pwdTooShort:'Password must be at least 6 characters', pwdOldWrong:'Current password incorrect', pwdSuccess:'Password changed, please re-login', settings:'Settings',
+    updateCheck:'Check Update', updateCurrent:'Current', updateLatest:'Latest', updateAvailable:'Update Available', updateUpToDate:'Up to date', updateNow:'Update Now', updateUpdating:'Updating...', updateSuccess:'Update complete, restarting...', updateFailed:'Update failed', updateChangelog:'Changelog', updateNoRepo:'GitHub repo not configured', updateReconnect:'Service restarting, reconnecting...',
+  }
+};
+const PROBE_I18N = {
+  zh: { identity:'自我认知', identityModel:'身份匹配', math:'数学能力', logic:'逻辑推理', strawberry:'字符计数', reasoning:'推理令牌', tempConsist:'温度一致性', longCtx:'长上下文', logprobs:'概率分布', ttft:'首Token延迟', modelField:'模型字段', tokenUsage:'Token用量', tokenizer:'Tokenizer指纹', knowledge:'知识新鲜度', structured:'结构化输出', encoding:'编解码能力', multilang:'多语言能力', behavior:'行为签名', speed:'速度特征' },
+  en: { identity:'Identity', identityModel:'Identity Match', math:'Math', logic:'Logic', strawberry:'Strawberry', reasoning:'Reasoning Tokens', tempConsist:'Temp Consistency', longCtx:'Long Context', logprobs:'Logprobs Entropy', ttft:'TTFT Latency', modelField:'Model Field', tokenUsage:'Token Usage', tokenizer:'Tokenizer FP', knowledge:'Knowledge', structured:'Structured JSON', encoding:'Base64 Decode', multilang:'Multilingual', behavior:'Behavior Sig.', speed:'Speed Profile' }
+};
+
+let curLang = localStorage.getItem('tg_lang') || 'zh';
+let curTheme = localStorage.getItem('tg_theme') || 'dark';
+
+function t(key) { return LANG[curLang]?.[key] || LANG.zh[key] || key; }
+
+function toggleTheme() {
+  curTheme = curTheme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('tg_theme', curTheme);
+  applyTheme();
+}
+function toggleLang() {
+  curLang = curLang === 'zh' ? 'en' : 'zh';
+  localStorage.setItem('tg_lang', curLang);
+  applyLang();
+}
+
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', curTheme);
+  const btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = curTheme === 'dark' ? `◐ ${t('themeLight')}` : `◑ ${t('themeDark')}`;
+}
+function applyLang() {
+  const $ = id => document.getElementById(id);
+  // Sidebar items
+  document.querySelectorAll('.sidebar-item').forEach(el => {
+    const tab = el.dataset.tab;
+    const map = { dashboard:'dashboard', channels:'channels', models:'models', detect:'detect', users:'users', logs:'logs', settings:'settings' };
+    if (map[tab]) {
+      const svg = el.querySelector('svg')?.outerHTML || '';
+      el.innerHTML = svg + '\n      ' + t(map[tab]);
+    }
+  });
+  // Sidebar buttons
+  if ($('btnLogout')) $('btnLogout').textContent = t('logout');
+  if ($('themeToggle')) $('themeToggle').textContent = curTheme === 'dark' ? `◐ ${t('themeLight')}` : `◑ ${t('themeDark')}`;
+  if ($('langToggle')) $('langToggle').textContent = curLang === 'zh' ? 'EN' : '中文';
+  // Login
+  const loginBtn = document.querySelector('#loginScreen .btn-primary');
+  if (loginBtn) loginBtn.textContent = t('login');
+  // Refresh current tab data
+  const activeTab = document.querySelector('.sidebar-item.active')?.dataset?.tab;
+  if (activeTab) switchTab(activeTab);
+}
+
+function initThemeLang() {
+  applyTheme();
+  const btn = document.getElementById('langToggle');
+  if (btn) btn.textContent = curLang === 'zh' ? 'EN' : '中文';
+}
+
+let TOKEN = localStorage.getItem('tg_token') || '';
+const API = '';
+
+// ── LCD Display ──
+function updateLcd() {
+  const val = document.getElementById('tokenInput').value;
+  const t = document.getElementById('lcdText');
+  t.innerHTML = val.length > 0
+    ? '•'.repeat(Math.min(val.length, 12)) + (val.length > 12 ? '..' : '') + '<span class="lcd-cursor">_</span>'
+    : '<span class="lcd-cursor">_</span>';
+}
+
+// ── Auth ──
+let _loginBusy = false;
+function doLogin() {
+  if (_loginBusy) return;
+  TOKEN = document.getElementById('tokenInput').value.trim();
+  if (!TOKEN) return;
+  _loginBusy = true;
+  const lcd = document.getElementById('lcd');
+  const btn = document.getElementById('unlockBtn');
+  const txt = document.getElementById('lcdText');
+  btn.textContent = '· · ·';
+  btn.disabled = true;
+  localStorage.setItem('tg_token', TOKEN);
+
+  api('GET', '/admin/channels').then(d => {
+    if (d.error) {
+      lcd.classList.add('lcd-err', 'lcd-shake');
+      txt.textContent = 'DENIED';
+      btn.textContent = 'UNLOCK';
+      btn.disabled = false;
+      _loginBusy = false;
+      TOKEN = ''; localStorage.removeItem('tg_token');
+      setTimeout(() => { lcd.classList.remove('lcd-err', 'lcd-shake'); updateLcd(); }, 1200);
+      return;
+    }
+    // Success — open the door
+    lcd.classList.add('lcd-ok');
+    txt.textContent = 'GRANTED';
+    btn.textContent = '✓ OPEN';
+    
+    // 🔥 PRE-LOAD DASHBOARD DATA:
+    // We trigger the API fetches and DOM rendering NOW, while the door is still closed.
+    // This prevents layout thrashing/stuttering during the 3D zoom animation later.
+    initThemeLang(); 
+    loadAll();
+    
+    // 1. Hide terminal
+    setTimeout(() => { 
+      const lp = document.getElementById('lockPanel');
+      lp.style.transform = 'translate(-50%, -50%) scale(0.9)';
+      lp.style.opacity = '0'; 
+    }, 500);
+
+    // 2. Open door and prepare mainApp
+    setTimeout(() => { 
+      // HIDE lockPanel completely to prevent backdrop-filter from destroying GPU framerate during scale
+      document.getElementById('lockPanel').style.display = 'none';
+
+      document.getElementById('doorBody').classList.add('door-open'); 
+      const mainApp = document.getElementById('mainApp');
+      mainApp.style.display = 'block';
+      mainApp.style.position = 'fixed';
+      mainApp.style.inset = '0';
+      mainApp.style.zIndex = '1';
+      mainApp.style.opacity = '0';
+      // Use translateZ(0) to force hardware acceleration (GPU layer) and prevent repaints
+      mainApp.style.transform = 'translateZ(0) scale(0.85)';
+      mainApp.style.transition = 'transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 1.2s cubic-bezier(0.2, 0.8, 0.2, 1)';
+
+      const loginScreen = document.getElementById('loginScreen');
+      loginScreen.style.position = 'fixed';
+      loginScreen.style.inset = '0';
+      loginScreen.style.zIndex = '5';
+      loginScreen.style.transition = 'transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 1.2s cubic-bezier(0.2, 0.8, 0.2, 1)';
+      loginScreen.style.transformOrigin = 'center';
+    }, 800);
+
+    // 3. Trigger cinematic zoom push
+    setTimeout(() => { 
+      // A small 50ms delay after display:block ensures the browser has calculated the initial layout,
+      // so the transition starts smoothly without dropping the first few frames.
+      const mainApp = document.getElementById('mainApp');
+      mainApp.style.opacity = '1';
+      mainApp.style.transform = 'translateZ(0) scale(1)';
+      
+      const loginScreen = document.getElementById('loginScreen');
+      loginScreen.style.transform = 'translateZ(0) scale(2.5)';
+      loginScreen.style.opacity = '0';
+    }, 850);
+
+    // 4. Clean up states
+    setTimeout(() => {
+      const loginScreen = document.getElementById('loginScreen');
+      loginScreen.style.display = 'none';
+      loginScreen.style.transform = '';
+      loginScreen.style.opacity = '';
+      loginScreen.style.position = 'relative';
+      loginScreen.style.zIndex = '';
+      
+      const mainApp = document.getElementById('mainApp');
+      mainApp.style.position = '';
+      mainApp.style.inset = '';
+      mainApp.style.zIndex = '';
+      mainApp.style.transform = '';
+      mainApp.style.transition = '';
+
+      _loginBusy = false;
+    }, 2300);
+  }).catch(() => {
+    lcd.classList.add('lcd-err', 'lcd-shake');
+    txt.textContent = 'ERROR';
+    btn.textContent = 'UNLOCK';
+    btn.disabled = false;
+    _loginBusy = false;
+    setTimeout(() => { lcd.classList.remove('lcd-err', 'lcd-shake'); updateLcd(); }, 1200);
+  });
+}
+
+function doLogout() { TOKEN = ''; localStorage.removeItem('tg_token'); location.reload(); }
+applyTheme();
+if (TOKEN) doLogin();
+
+// ── API Helper ──
+async function api(method, path, body) {
+  const opts = { method, headers: { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(API + path, opts);
+  return r.json();
+}
+
+// ── Tabs (sidebar) ──
+function switchTab(name) {
+  document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'none');
+  document.getElementById('tab-' + name).style.display = 'block';
+  document.querySelectorAll('.sidebar-item').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  closeMobileNav();
+  if (name === 'dashboard') loadStats();
+  if (name === 'channels') loadChannels();
+  if (name === 'models') loadModels();
+  if (name === 'detect') loadDetectTab();
+  if (name === 'users') loadUsers();
+  if (name === 'logs') loadLogs();
+}
+function loadAll() { loadStats(); loadChannels(); }
+
+// ── Helpers ──
+function fmtNum(n) { return n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : String(n||0); }
+function fmtQuota(used, total) {
+  if (total < 0) return `${fmtNum(used)} / ${curLang==='zh'?'无限':'Unlimited'}`;
+  const pct = total > 0 ? Math.min(100, Math.round(used/total*100)) : 0;
+  const color = pct > 90 ? '#ef4444' : pct > 70 ? '#f59e0b' : '#22c55e';
+  return `<div class="flex items-center gap-2"><span>${fmtNum(used)} / ${fmtNum(total)}</span><div class="progress-bar" style="width:80px;"><div class="progress-fill" style="width:${pct}%;background:${color};"></div></div><span class="text-xs text-gray-500">${pct}%</span></div>`;
+}
+
+// ── Dashboard ──
+async function loadStats() {
+  const hdr = document.querySelector('#tab-dashboard h1');
+  if (hdr) hdr.textContent = t('dashboard');
+  // Update stat labels
+  document.querySelectorAll('#tab-dashboard .stat-label').forEach((el, i) => {
+    const keys = ['req24h','success','failed','avgLatency'];
+    if (keys[i]) el.textContent = t(keys[i]);
+  });
+  // Update table headers
+  const byModelH = document.querySelector('#tab-dashboard .card:first-child h3');
+  const byChH = document.querySelector('#tab-dashboard .card:last-child h3');
+  if (byModelH) byModelH.textContent = t('byModel');
+  if (byChH) byChH.textContent = t('byChannel');
+
+  const d = await api('GET', '/admin/stats?hours=24');
+  if (!d.summary) return;
+  const s = d.summary;
+  document.getElementById('statTotal').textContent = fmtNum(s.total);
+  document.getElementById('statSuccess').textContent = fmtNum(s.success);
+  document.getElementById('statFailed').textContent = fmtNum(s.failed);
+  document.getElementById('statAvgMs').textContent = s.avg_duration ? Math.round(s.avg_duration) + 'ms' : '-';
+  const totalTok = (s.total_prompt_tokens||0) + (s.total_completion_tokens||0);
+  document.getElementById('statTokens').textContent = totalTok ? `${fmtNum(totalTok)} tokens` : '';
+  document.getElementById('statSuccessRate').textContent = s.total ? `${Math.round((s.success||0)/s.total*100)}% ${t('successRate')}` : '';
+  document.getElementById('dashUpdateTime').textContent = t('updatedAt') + ' ' + new Date().toLocaleTimeString();
+  document.getElementById('statByModel').innerHTML = (d.byModel || []).map(m =>
+    `<tr><td class="font-mono text-xs">${esc(m.model)}</td><td>${m.count}</td><td>${m.count ? Math.round(m.success/m.count*100) : 0}%</td><td>${Math.round(m.avg_duration||0)}ms</td></tr>`
+  ).join('') || `<tr><td colspan="4" style="color:var(--text3);" class="text-center py-4">${t('noData')}</td></tr>`;
+  document.getElementById('statByChannel').innerHTML = (d.byChannel || []).map(c =>
+    `<tr><td class="text-xs">${esc(c.channel_name||'CH'+c.channel_id)}</td><td>${c.count}</td><td>${c.count ? Math.round(c.success/c.count*100) : 0}%</td><td>${Math.round(c.avg_duration||0)}ms</td></tr>`
+  ).join('') || `<tr><td colspan="4" style="color:var(--text3);" class="text-center py-4">${t('noData')}</td></tr>`;
+
+  // Load detection health overview
+  loadDetectOverview();
+  loadRoutingStatus();
+}
+
+async function loadRoutingStatus() {
+  const card = document.getElementById('routingStatusCard');
+  if (!card) return;
+  const titleEl = document.getElementById('routingStatusTitle');
+  if (titleEl) titleEl.textContent = curLang==='zh' ? '路由引擎状态' : 'Routing Engine Status';
+  try {
+    const [rs, ch] = await Promise.all([
+      api('GET', '/admin/routing-stats'),
+      api('GET', '/admin/channels')
+    ]);
+    const channels = (ch.channels || []).filter(c => c.status === 'enabled');
+    if (!channels.length) { card.style.display = 'none'; return; }
+    card.style.display = 'block';
+    const stickyEl = document.getElementById('routingStickyLabel');
+    if (stickyEl) stickyEl.textContent = `${curLang==='zh'?'粘性会话':'Sticky sessions'}: ${rs.stickySessions || 0}`;
+    const latencies = rs.latencies || {};
+    const rateLimits = rs.rateLimits || {};
+    const hasData = Object.keys(latencies).length > 0 || Object.keys(rateLimits).length > 0;
+    if (!hasData) {
+      document.getElementById('routingChannelStats').innerHTML = `<div style="color:var(--text3);font-size:12px;text-align:center;padding:8px;">${curLang==='zh'?'暂无路由数据（有请求后自动更新）':'No routing data yet (updates after requests)'}</div>`;
+      return;
+    }
+    let html = '<div class="grid grid-cols-2 lg:grid-cols-4 gap-2">';
+    for (const c of channels) {
+      const lat = latencies[c.id];
+      const rl = rateLimits[c.id];
+      const latColor = !lat ? 'var(--text3)' : lat < 2000 ? '#22c55e' : lat < 5000 ? '#f59e0b' : '#ef4444';
+      const latText = lat ? `${lat}ms` : '—';
+      const rlBadge = rl ? `<span class="badge badge-red" style="font-size:9px;">429 🧊${rl.cooldownRemaining}s</span>` : '';
+      html += `<div class="stat-card" style="padding:8px 12px;">
+        <div class="text-xs" style="color:var(--text3);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(c.name)}">${esc(c.name)}</div>
+        <div style="font-size:16px;font-weight:700;color:${latColor};">${latText}</div>
+        ${rlBadge}
+      </div>`;
+    }
+    html += '</div>';
+    document.getElementById('routingChannelStats').innerHTML = html;
+  } catch(e) { card.style.display = 'none'; }
+}
+
+async function loadDetectOverview() {
+  const ov = document.getElementById('detectOverview');
+  if (!ov) return;
+  document.getElementById('detectOverviewTitle').textContent = t('detectHealth');
+  document.getElementById('detectOverviewLink').textContent = t('viewDetail');
+
+  const ch = await api('GET', '/admin/channels');
+  const channels = (ch.channels || []).filter(c => c.status === 'enabled');
+  if (!channels.length) { ov.style.display = 'none'; return; }
+
+  let totalModels = 0, testedModels = 0, passModels = 0, riskModels = 0;
+  const riskItems = [];
+
+  for (const c of channels) {
+    const models = c.models || [];
+    totalModels += models.length;
+    const det = await api('GET', `/admin/detect/${c.id}`);
+    const results = det.results || [];
+    const latest = {};
+    for (const r of results) { if (!latest[r.model]) latest[r.model] = r; }
+
+    let chScores = [];
+    for (const m of models) {
+      const r = latest[m];
+      if (!r) continue;
+      testedModels++;
+      chScores.push(r.score || 0);
+      if (r.score >= 70) passModels++;
+      else riskModels++;
+    }
+
+    if (chScores.length) {
+      const avg = Math.round(chScores.reduce((a,b) => a+b, 0) / chScores.length);
+      if (avg < 70) {
+        riskItems.push({ name: c.name, id: c.id, score: avg, tested: chScores.length, total: models.length });
+      }
+    }
+  }
+
+  ov.style.display = 'block';
+
+  if (!testedModels) {
+    document.getElementById('detectHealthCards').innerHTML = '';
+    document.getElementById('detectRiskList').innerHTML = `<div style="color:var(--text3);font-size:13px;text-align:center;padding:8px 0;">${t('noDetectYet')}</div>`;
+    return;
+  }
+
+  const passRate = testedModels ? Math.round(passModels / testedModels * 100) : 0;
+  const passColor = passRate >= 80 ? '#22c55e' : passRate >= 50 ? '#f59e0b' : '#ef4444';
+
+  document.getElementById('detectHealthCards').innerHTML = `
+    <div class="stat-card"><div class="stat-label">${t('chTotal')}</div><div class="stat-num">${channels.length}</div></div>
+    <div class="stat-card"><div class="stat-label">${t('modelTotal')}</div><div class="stat-num">${totalModels}<span style="font-size:12px;color:var(--text3);font-weight:400;margin-left:4px;">(${testedModels} ${t('detected')})</span></div></div>
+    <div class="stat-card glow-green"><div class="stat-label">${t('detectPass')}</div><div class="stat-num" style="color:#22c55e;">${passModels}</div><div class="stat-sub" style="color:${passColor};">${passRate}%</div></div>
+    <div class="stat-card ${riskModels ? 'glow-red' : ''}"><div class="stat-label">${t('detectRisk')}</div><div class="stat-num" style="color:${riskModels ? '#ef4444' : '#22c55e'};">${riskModels}</div></div>
+  `;
+
+  if (riskItems.length) {
+    document.getElementById('detectRiskList').innerHTML = `
+      <div style="margin-top:4px;">
+        <div class="text-xs mb-2" style="color:var(--text3);">⚠️ ${t('riskDesc')}</div>
+        ${riskItems.map(r => `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border:1px solid rgba(239,68,68,.15);border-radius:8px;margin-bottom:4px;background:rgba(239,68,68,.03);">
+            <div class="flex items-center gap-3">
+              <span class="font-semibold" style="font-size:13px;">${esc(r.name)}</span>
+              <span class="badge badge-red">${t('avgScoreLabel')}: ${r.score}/100</span>
+              <span style="font-size:11px;color:var(--text3);">${r.tested}/${r.total} ${t('detected')}</span>
+            </div>
+            <button class="btn btn-outline btn-xs" style="color:#f59e0b;border-color:#92400e;" onclick="switchTab('detect')">${t('detect2')}</button>
+          </div>
+        `).join('')}
+      </div>`;
+  } else {
+    document.getElementById('detectRiskList').innerHTML = '';
+  }
+}
+
+// ── Channels ──
+async function loadChannels() {
+  const d = await api('GET', '/admin/channels');
+  const hdr = document.getElementById('chMgmtTitle');
+  if (hdr) hdr.textContent = t('channelMgmt');
+  const btnR = document.getElementById('btnReloadCfg');
+  if (btnR) btnR.textContent = t('reloadConfig');
+  const btnA = document.getElementById('btnAddCh');
+  if (btnA) btnA.textContent = t('addChannel');
+  const channels = d.channels || [];
+  if (!channels.length) {
+    document.getElementById('channelList').innerHTML = `<div class="card text-center py-8" style="color:var(--text3);">${t('noChannels')}</div>`;
+    return;
+  }
+  document.getElementById('channelList').innerHTML = channels.map(ch => {
+    const models = ch.models || [];
+    return `<div class="ch-card" id="chCard${ch.id}">
+      <div class="ch-header" onclick="toggleChannel(${ch.id})">
+        <div class="ch-meta">
+          <button class="ch-expand" id="chExp${ch.id}">▸</button>
+          <span class="ch-meta-name">${esc(ch.name)}</span>
+          <span class="badge ${ch.type==='anthropic'?'badge-amber':'badge-blue'}">${ch.type}</span>
+          <span class="badge ${ch.status==='enabled'?'badge-green':'badge-red'}">${ch.status}</span>
+        </div>
+        <div class="ch-meta-info">
+          <span class="ch-meta-endpoint" title="${esc(ch.endpoint)}">${esc(ch.endpoint)}</span>
+          <span class="badge badge-blue">${models.length} ${t('modelsCount')}</span>
+          <span class="badge badge-purple">${ch.keys?.length||0} ${t('keysCount')}</span>
+        </div>
+        <div class="ch-actions" onclick="event.stopPropagation()">
+          <button class="btn btn-outline btn-xs" onclick="showEditChannel(${ch.id})">${t('edit')}</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteChannel(${ch.id})">${t('delete')}</button>
+        </div>
+      </div>
+      <div class="ch-body" id="chBody${ch.id}">
+        <div class="ch-stats">
+          <span>ID: <strong>${ch.id}</strong></span>
+          <span>${t('priority')}: <strong>P${ch.priority}</strong></span>
+          <span>${t('weightLabel')}: <strong>${ch.weight}</strong></span>
+          <span>${t('modelCount')}: <strong>${models.length}</strong></span>
+        </div>
+        <div style="padding:8px 20px;font-size:11px;color:var(--accent);background:rgba(99,102,241,.06);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;">
+          <span style="font-size:13px;">💡</span> ${t('connHint')}
+        </div>
+        ${models.length ? models.map(m => {
+          const isDisabled = (ch.disabledModels || []).includes(m);
+          const mkey = `${ch.id}_${btoa(unescape(encodeURIComponent(m))).replace(/[=+/]/g,'_')}`;
+          return `<div class="ch-model-row${isDisabled?' ch-model-disabled':''}" id="chMR_${mkey}">
+            <span class="ch-model-name" style="${isDisabled?'text-decoration:line-through;opacity:.5':''}">${esc(m)}</span>
+            <div class="ch-model-result" id="chMRes_${mkey}"></div>
+            <button class="btn btn-xs ${isDisabled?'btn-outline':'btn-outline'}" style="font-size:10px;padding:1px 8px;${isDisabled?'color:#ef4444;border-color:#7f1d1d':'color:#22c55e;border-color:#14532d'}" onclick="toggleModelEnabled(${ch.id},'${esc(m)}',${isDisabled})">${isDisabled?t('toggleEnable'):t('toggleDisable')}</button>
+            <button class="btn btn-outline btn-xs" onclick="testChannelModel(${ch.id},'${esc(m)}')" ${isDisabled?'disabled':''}>${t('testModel')}</button>
+          </div>`;
+        }).join('') : `<div style="padding:16px 20px;color:var(--text3);font-size:13px;">${t('noModels')}</div>`}
+        <div class="ch-test-all">
+          <button class="btn btn-outline btn-sm" onclick="testAllModels(${ch.id})" id="chTestAll${ch.id}">${t('testAll')} (${models.length})</button>
+          <button class="btn btn-outline btn-sm" style="color:#f59e0b;border-color:#92400e;" onclick="runDetect(${ch.id})">${t('detect2')}</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleChannel(id) {
+  const body = document.getElementById('chBody' + id);
+  const exp = document.getElementById('chExp' + id);
+  if (!body) return;
+  const isOpen = body.classList.toggle('open');
+  if (exp) exp.textContent = isOpen ? '▾' : '▸';
+}
+
+async function toggleModelEnabled(chId, model, currentlyDisabled) {
+  const newEnabled = currentlyDisabled; // if currently disabled, enable it
+  const d = await api('PUT', `/admin/channels/${chId}/models/${encodeURIComponent(model)}/toggle`, { enabled: newEnabled });
+  if (d.error) { toast(d.error, 'red'); return; }
+  toast(`${model} → ${newEnabled ? t('modelEnabled') : t('modelDisabled')}`, newEnabled ? 'green' : 'amber');
+  loadChannels();
+}
+
+function modelKey(chId, model) {
+  return `${chId}_${btoa(unescape(encodeURIComponent(model))).replace(/[=+/]/g,'_')}`;
+}
+
+async function testChannelModel(chId, model) {
+  const mk = modelKey(chId, model);
+  const resEl = document.getElementById('chMRes_' + mk);
+  if (resEl) resEl.innerHTML = `<span class="spin"></span> <span style="color:var(--text3);font-size:11px;">${t('testing2')}...</span>`;
+  const d = await api('POST', `/admin/channels/${chId}/test`, { model });
+  if (!resEl) return;
+  if (d.ok) {
+    const timeColor = d.responseTime < 2000 ? '#22c55e' : d.responseTime < 5000 ? '#f59e0b' : '#ef4444';
+    const retMismatch = d.returnedModel && d.returnedModel !== model;
+    resEl.innerHTML = `
+      <span class="badge badge-green">HTTP ${d.status}</span>
+      <span style="color:${timeColor};font-weight:600;font-size:12px;">${d.responseTime}ms</span>
+      ${retMismatch ? `<span class="badge badge-amber" title="${t('retModel')}: ${esc(d.returnedModel)}">${esc(d.returnedModel)}</span>` : ''}
+      <span style="color:#22c55e;font-size:14px;cursor:pointer;" title="${esc(d.content||'')}" onclick="event.stopPropagation();showTestDetail(${chId},'${esc(model)}',this)">✓</span>
+    `;
+  } else {
+    const errShort = (d.error||'Error').slice(0, 60);
+    resEl.innerHTML = `
+      <span class="badge badge-red">HTTP ${d.status||'ERR'}</span>
+      <span style="color:#ef4444;font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(d.error||'')}">${esc(errShort)}</span>
+    `;
+  }
+}
+
+async function testAllModels(chId) {
+  const btn = document.getElementById('chTestAll' + chId);
+  const body = document.getElementById('chBody' + chId);
+  if (!body) return;
+  // ensure expanded
+  if (!body.classList.contains('open')) toggleChannel(chId);
+  const rows = body.querySelectorAll('.ch-model-row');
+  if (!rows.length) return;
+  const models = [...rows].map(r => r.querySelector('.ch-model-name')?.textContent?.trim()).filter(Boolean);
+  if (btn) { btn.disabled = true; btn.innerHTML = `<span class="spin"></span> ${t('testing2')}... 0/${models.length}`; }
+  for (let i = 0; i < models.length; i++) {
+    if (btn) btn.innerHTML = `<span class="spin"></span> ${t('testing2')}... ${i+1}/${models.length}`;
+    await testChannelModel(chId, models[i]);
+  }
+  if (btn) { btn.disabled = false; btn.textContent = `${t('testAll')} (${models.length})`; }
+}
+
+function showTestDetail(chId, model, el) {
+  // Small utility to show full test result in modal
+  testChannelModelDetail(chId, model);
+}
+
+async function testChannelModelDetail(chId, model) {
+  toast(t('testing'), 'blue');
+  const d = await api('POST', `/admin/channels/${chId}/test`, { model });
+  const ok = d.ok;
+  const statusBadge = ok
+    ? `<span class="badge badge-green">HTTP ${d.status}</span>`
+    : `<span class="badge badge-red">HTTP ${d.status || 'ERR'}</span>`;
+  const timeBadge = d.responseTime != null
+    ? `<span class="badge ${d.responseTime < 2000 ? 'badge-green' : d.responseTime < 5000 ? 'badge-amber' : 'badge-red'}">${d.responseTime}ms</span>`
+    : '';
+  showModal(ok ? `✓ ${t('connOk')}` : `✗ ${t('connFailed')}`, `
+    <div style="margin-bottom:16px;">
+      <div class="flex items-center gap-3 mb-3">
+        ${statusBadge} ${timeBadge}
+        <span style="color:var(--text3);font-size:12px;">${esc(model)}</span>
+      </div>
+    </div>
+    <div class="conn-result">
+      <span class="conn-label">${t('httpStatus')}</span>
+      <span class="conn-value">${ok ? '<span style="color:#22c55e;">'+d.status+' OK</span>' : '<span style="color:#ef4444;">'+(d.status||'N/A')+' Error</span>'}</span>
+      <span class="conn-label">${t('respTime')}</span>
+      <span class="conn-value">${d.responseTime != null ? d.responseTime + 'ms' : '—'}</span>
+      ${ok ? `
+        <span class="conn-label">${t('reqModel')}</span>
+        <span class="conn-value">${esc(model)}</span>
+        <span class="conn-label">${t('retModel')}</span>
+        <span class="conn-value">${d.returnedModel && d.returnedModel !== model ? '<span style="color:#f59e0b;">'+esc(d.returnedModel)+'</span>' : esc(d.returnedModel||'—')}</span>
+        <span class="conn-label">${t('respContent')}</span>
+        <span class="conn-value" style="font-size:12px;word-break:break-all;">"${esc(d.content||'')}"</span>
+      ` : `
+        <span class="conn-label">${t('errorInfo')}</span>
+        <span class="conn-value" style="color:#ef4444;font-size:12px;word-break:break-all;">${esc(d.error||'Unknown error')}</span>
+      `}
+    </div>
+    <button class="btn btn-outline w-full mt-4" onclick="closeModal()">${curLang==='zh'?'关闭':'Close'}</button>
+  `);
+}
+
+async function fetchModelsForForm(prefix) {
+  const endpoint = document.getElementById(prefix + '_endpoint').value.trim();
+  const keysRaw = document.getElementById(prefix + '_keys').value.trim();
+  const key = keysRaw.split('\n').map(k => k.trim()).filter(Boolean)[0] || '';
+  const type = document.getElementById(prefix + '_type').value;
+  if (!endpoint) { toast(curLang==='zh'?'请先填写端点':'Please enter endpoint first', 'red'); return; }
+  const picker = document.getElementById(prefix + '_modelPicker');
+  picker.style.display = 'block';
+  picker.innerHTML = `<div class="flex items-center gap-2 text-xs py-2" style="color:var(--text3);"><span class="spin"></span> ${curLang==='zh'?'获取中...':'Fetching...'}</div>`;
+  const d = await api('POST', '/admin/channels/fetch-models', { endpoint, key, type });
+  if (d.error && !d.models?.length) { picker.innerHTML = `<div class="text-xs py-2" style="color:#ef4444;">${curLang==='zh'?'获取失败':'Fetch failed'}: ${esc(d.error)}</div>`; return; }
+  const models = d.models || [];
+  if (!models.length) { picker.innerHTML = `<div class="text-xs py-2" style="color:var(--text3);">${curLang==='zh'?'未发现模型':'No models found'}</div>`; return; }
+  // Get currently selected models from textarea
+  const current = document.getElementById(prefix + '_models').value.trim().split(/[,\n]/).map(m => m.trim()).filter(Boolean);
+  const currentSet = new Set(current);
+  // Hide textarea, show picker instead
+  document.getElementById(prefix + '_models').style.display = 'none';
+  const selectedCount = currentSet.size;
+  picker.innerHTML = `
+    <div class="flex justify-between items-center mb-2">
+      <span class="text-xs" style="color:var(--text3);">${models.length} ${curLang==='zh'?'个模型':'models'} ${d.source === 'preset' ? (curLang==='zh'?'(预设)':'(preset)') : ''}</span>
+      <div class="flex gap-2">
+        <button class="btn btn-ghost btn-xs" onclick="toggleAllModels('${prefix}',true)">${curLang==='zh'?'全选':'All'}</button>
+        <button class="btn btn-ghost btn-xs" onclick="toggleAllModels('${prefix}',false)">${curLang==='zh'?'全不选':'None'}</button>
+      </div>
+    </div>
+    <input type="text" id="${prefix}_modelSearch" placeholder="${curLang==='zh'?'搜索模型...':'Search models...'}" oninput="filterModels('${prefix}')" style="width:100%;padding:5px 8px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);margin-bottom:6px;outline:none;">
+    <div class="mp-list" id="${prefix}_modelList">
+      ${models.map(m => `<label class="mp-item"><input type="checkbox" class="${prefix}_modelCb" value="${esc(m)}" ${currentSet.has(m)?'checked':''} onchange="syncModelPicker('${prefix}')">${esc(m)}</label>`).join('')}
+    </div>
+    <div class="flex justify-between items-center mt-2" style="font-size:11px;color:var(--text3);">
+      <span id="${prefix}_selCount">${curLang==='zh'?'已选':'Selected'}: ${selectedCount}</span>
+      <button class="btn btn-ghost btn-xs" onclick="document.getElementById('${prefix}_models').style.display='block';document.getElementById('${prefix}_modelPicker').style.display='none';">${curLang==='zh'?'手动输入':'Manual input'}</button>
+    </div>`;
+  syncModelPicker(prefix);
+}
+function filterModels(prefix) {
+  const q = document.getElementById(prefix + '_modelSearch').value.toLowerCase();
+  document.querySelectorAll('#' + prefix + '_modelList .mp-item').forEach(el => {
+    el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+function toggleAllModels(prefix, checked) {
+  document.querySelectorAll('#' + prefix + '_modelList .mp-item:not([style*="display: none"]) .' + prefix + '_modelCb').forEach(cb => cb.checked = checked);
+  syncModelPicker(prefix);
+}
+function syncModelPicker(prefix) {
+  const selected = [...document.querySelectorAll('.' + prefix + '_modelCb:checked')].map(cb => cb.value);
+  document.getElementById(prefix + '_models').value = selected.join(', ');
+  const countEl = document.getElementById(prefix + '_selCount');
+  if (countEl) countEl.textContent = `${curLang==='zh'?'已选':'Selected'}: ${selected.length}`;
+}
+
+async function deleteChannel(id) {
+  if (!confirm(curLang==='zh'?'确定删除此渠道？':'Delete this channel?')) return;
+  await api('DELETE', `/admin/channels/${id}`);
+  toast(curLang==='zh'?'已删除':'Deleted', 'green'); loadChannels();
+}
+
+function showAddChannel() {
+  const zh = curLang==='zh';
+  showModal(zh?'添加渠道':'Add Channel', `
+    <div class="space-y-3">
+      <div><label class="text-xs text-gray-400">${zh?'名称':'Name'}</label><input id="ch_name" placeholder="My Provider"></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="text-xs text-gray-400">${zh?'协议类型':'Protocol'}</label><select id="ch_type"><option value="openai">OpenAI</option><option value="anthropic">Anthropic</option></select></div>
+        <div><label class="text-xs text-gray-400">${zh?'优先级':'Priority'}</label><input id="ch_priority" type="number" value="1"></div>
+      </div>
+      <div><label class="text-xs text-gray-400">${zh?'端点':'Endpoint'}</label><input id="ch_endpoint" placeholder="https://api.example.com/v1"></div>
+      <div><label class="text-xs text-gray-400">API Keys${zh?'（每行一个）':' (one per line)'}</label><textarea id="ch_keys" rows="3" placeholder="sk-xxx&#10;sk-yyy"></textarea></div>
+      <div>
+        <div class="flex justify-between items-center mb-1">
+          <label class="text-xs text-gray-400">${zh?'模型':'Models'}</label>
+          <button class="btn btn-outline btn-xs" type="button" onclick="fetchModelsForForm('ch')">${zh?'获取模型列表':'Fetch Models'}</button>
+        </div>
+        <div id="ch_modelPicker" class="mp-container"></div>
+        <textarea id="ch_models" rows="2" placeholder="gpt-4o, gpt-4o-mini"></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="text-xs text-gray-400">${zh?'权重':'Weight'}</label><input id="ch_weight" type="number" value="10"></div>
+        <div><label class="text-xs text-gray-400">${zh?'模型映射':'Model Mapping'} (JSON)</label><input id="ch_mapping" placeholder='{}' value="{}"></div>
+      </div>
+      <button class="btn btn-primary w-full mt-2" onclick="submitAddChannel()">${zh?'添加':'Add'}</button>
+    </div>
+  `);
+}
+
+async function submitAddChannel() {
+  const keys = document.getElementById('ch_keys').value.trim().split('\n').map(k => k.trim()).filter(Boolean);
+  const models = document.getElementById('ch_models').value.trim().split(/[,\n]/).map(m => m.trim()).filter(Boolean);
+  let mapping = {};
+  try { mapping = JSON.parse(document.getElementById('ch_mapping').value || '{}'); } catch (_) {}
+  const ch = {
+    name: document.getElementById('ch_name').value.trim(),
+    type: document.getElementById('ch_type').value,
+    endpoint: document.getElementById('ch_endpoint').value.trim(),
+    keys, models, modelMapping: mapping,
+    weight: parseInt(document.getElementById('ch_weight').value) || 10,
+    priority: parseInt(document.getElementById('ch_priority').value) || 1,
+  };
+  if (!ch.name || !ch.endpoint || !keys.length) { toast(curLang==='zh'?'请填写必填项':'Please fill required fields', 'red'); return; }
+  const d = await api('POST', '/admin/channels', ch);
+  if (d.error) { toast(d.error, 'red'); return; }
+  toast(curLang==='zh'?'渠道已添加':'Channel added', 'green'); closeModal(); loadChannels();
+}
+
+async function showEditChannel(id) {
+  const d = await api('GET', `/admin/channels/${id}`);
+  const ch = d.channel; if (!ch) { toast(curLang==='zh'?'渠道不存在':'Channel not found', 'red'); return; }
+  const zh = curLang==='zh';
+  showModal((zh?'编辑渠道':'Edit Channel')+' #' + id, `
+    <div class="space-y-3">
+      <div><label class="text-xs text-gray-400">${zh?'名称':'Name'}</label><input id="ed_name" value="${esc(ch.name)}"></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="text-xs text-gray-400">${zh?'协议类型':'Protocol'}</label><select id="ed_type"><option value="openai" ${ch.type==='openai'?'selected':''}>OpenAI</option><option value="anthropic" ${ch.type==='anthropic'?'selected':''}>Anthropic</option></select></div>
+        <div><label class="text-xs text-gray-400">${zh?'优先级':'Priority'}</label><input id="ed_priority" type="number" value="${ch.priority}"></div>
+      </div>
+      <div><label class="text-xs text-gray-400">${zh?'端点':'Endpoint'}</label><input id="ed_endpoint" value="${esc(ch.endpoint)}"></div>
+      <div><label class="text-xs text-gray-400">API Keys${zh?'（每行一个）':' (one per line)'}</label><textarea id="ed_keys" rows="3" placeholder="${zh?'留空保持不变':'Leave empty to keep unchanged'}">${(ch.keys||[]).join('\n')}</textarea></div>
+      <div>
+        <div class="flex justify-between items-center mb-1">
+          <label class="text-xs text-gray-400">${zh?'模型':'Models'}</label>
+          <button class="btn btn-outline btn-xs" type="button" onclick="fetchModelsForForm('ed')">${zh?'获取模型列表':'Fetch Models'}</button>
+        </div>
+        <div id="ed_modelPicker" class="mp-container"></div>
+        <textarea id="ed_models" rows="2">${(ch.models||[]).join(', ')}</textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="text-xs text-gray-400">${zh?'权重':'Weight'}</label><input id="ed_weight" type="number" value="${ch.weight}"></div>
+        <div><label class="text-xs text-gray-400">${zh?'状态':'Status'}</label><select id="ed_status"><option value="enabled" ${ch.status==='enabled'?'selected':''}>${zh?'启用':'Enabled'}</option><option value="disabled" ${ch.status==='disabled'?'selected':''}>${zh?'禁用':'Disabled'}</option></select></div>
+      </div>
+      <button class="btn btn-primary w-full mt-2" onclick="submitEditChannel(${id})">${zh?'保存':'Save'}</button>
+    </div>
+  `);
+}
+
+async function submitEditChannel(id) {
+  const keysRaw = document.getElementById('ed_keys').value.trim();
+  const updates = {
+    name: document.getElementById('ed_name').value.trim(),
+    type: document.getElementById('ed_type').value,
+    endpoint: document.getElementById('ed_endpoint').value.trim(),
+    models: document.getElementById('ed_models').value.trim().split(/[,\n]/).map(m => m.trim()).filter(Boolean),
+    weight: parseInt(document.getElementById('ed_weight').value) || 10,
+    priority: parseInt(document.getElementById('ed_priority').value) || 1,
+    status: document.getElementById('ed_status').value,
+  };
+  if (keysRaw) updates.keys = keysRaw.split('\n').map(k => k.trim()).filter(Boolean);
+  const d = await api('PUT', `/admin/channels/${id}`, updates);
+  if (d.error) { toast(d.error, 'red'); return; }
+  toast(curLang==='zh'?'渠道已更新':'Channel updated', 'green'); closeModal(); loadChannels();
+}
+
+// ── Models ──
+async function loadModels() {
+  const hdr = document.getElementById('modelTabTitle');
+  if (hdr) hdr.textContent = t('modelList');
+  const thRow = document.querySelector('#tab-models thead tr');
+  if (thRow) thRow.innerHTML = `<th>${t('modelId')}</th><th>${t('availCh')}</th><th>${t('chCount')}</th>`;
+  // i18n alias panel
+  const ab = document.getElementById('aliasBtn');
+  if (ab) ab.textContent = curLang==='zh'?'别名管理':'Alias';
+  const apt = document.getElementById('aliasPanelTitle');
+  if (apt) apt.textContent = curLang==='zh'?'模型别名映射':'Model Alias Mapping';
+  const ad = document.getElementById('aliasDesc');
+  if (ad) ad.textContent = curLang==='zh'?'将不同中转站的模型名统一映射到一个规范名称。用户请求规范名即可，GateAPI 自动适配各渠道的变体名。':'Map different provider model names to a canonical name. Request the canonical name and GateAPI auto-matches channel variants.';
+  const baa = document.getElementById('btnAddAlias');
+  if (baa) baa.textContent = curLang==='zh'?'+ 添加别名':'+ Add Alias';
+  const bsa = document.getElementById('btnSaveAlias');
+  if (bsa) bsa.textContent = curLang==='zh'?'保存':'Save';
+  loadAliases();
+  const d = await api('GET', '/admin/models');
+  document.getElementById('modelList').innerHTML = (d.models || []).map(m => `
+    <tr>
+      <td class="font-mono text-xs">${esc(m.id)}</td>
+      <td>${m.channels.map(c => `<span class="badge badge-blue mr-1 mb-1">${esc(c.name)} <span style="color:var(--text4);">P${c.priority}</span></span>`).join('')}</td>
+      <td style="color:var(--text3);">${m.channels.length}</td>
+    </tr>
+  `).join('') || `<tr><td colspan="3" style="color:var(--text3);" class="text-center py-8">${t('noModels')}</td></tr>`;
+}
+
+// ── Alias Management ──
+function toggleAliasPanel() {
+  const p = document.getElementById('aliasPanel');
+  if (p.style.display === 'none') { p.style.display = 'block'; loadAliases(); }
+  else p.style.display = 'none';
+}
+
+async function loadAliases() {
+  const d = await api('GET', '/admin/model-aliases');
+  const aliases = d.aliases || {};
+  const container = document.getElementById('aliasRows');
+  container.innerHTML = '';
+  for (const [canonical, variants] of Object.entries(aliases)) {
+    _addAliasRowHTML(container, canonical, variants.join(', '));
+  }
+  if (!Object.keys(aliases).length) _addAliasRowHTML(container, '', '');
+}
+
+function _addAliasRowHTML(container, canonical, variants) {
+  const row = document.createElement('div');
+  row.className = 'flex gap-2 mb-2 items-center';
+  row.innerHTML = `
+    <input type="text" placeholder="${curLang==='zh'?'规范名 (如 claude-opus-4-7)':'Canonical name'}" value="${esc(canonical)}" class="alias-canonical" style="flex:1;font-size:12px;">
+    <span style="color:var(--text3);font-size:12px;">→</span>
+    <input type="text" placeholder="${curLang==='zh'?'变体名，逗号分隔 (如 claude-4.7, claude-4-7-high)':'Variants, comma separated'}" value="${esc(variants)}" class="alias-variants" style="flex:2;font-size:12px;">
+    <button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()" style="padding:2px 8px;">✕</button>
+  `;
+  container.appendChild(row);
+}
+
+function addAliasRow() {
+  _addAliasRowHTML(document.getElementById('aliasRows'), '', '');
+}
+
+async function saveAliases() {
+  const rows = document.getElementById('aliasRows').querySelectorAll('.flex');
+  const aliases = {};
+  rows.forEach(row => {
+    const canonical = row.querySelector('.alias-canonical').value.trim();
+    const varStr = row.querySelector('.alias-variants').value.trim();
+    if (!canonical || !varStr) return;
+    aliases[canonical] = varStr.split(',').map(s => s.trim()).filter(Boolean);
+  });
+  const d = await api('PUT', '/admin/model-aliases', { aliases });
+  if (d.error) { toast(d.error, 'red'); return; }
+  toast(curLang==='zh' ? '别名已保存，模型索引已重建' : 'Aliases saved, model index rebuilt', 'green');
+  document.getElementById('aliasPanel').style.display = 'none';
+  loadModels();
+}
+
+// ── Logs ──
+async function loadLogs() {
+  const hdr = document.getElementById('logTitle');
+  if (hdr) hdr.textContent = t('reqLogs');
+  const blr = document.getElementById('btnLogRefresh');
+  if (blr) blr.textContent = t('refresh');
+  const thRow = document.querySelector('#tab-logs thead tr');
+  if (thRow) thRow.innerHTML = `<th>${t('time2')}</th><th>${t('model')}</th><th>${t('channel')}</th><th>${t('statusCode')}</th><th>${t('latency')}</th><th>${t('tokens')}</th><th>${t('error')}</th>`;
+  const d = await api('GET', '/admin/logs?limit=100');
+  document.getElementById('logList').innerHTML = (d.logs || []).map(l => {
+    const time = new Date(l.ts).toLocaleTimeString();
+    const ok = !l.error;
+    return `<tr>
+      <td class="text-xs" style="color:var(--text3);">${time}</td>
+      <td class="font-mono text-xs">${esc(l.model)}</td>
+      <td class="text-xs">${esc(l.channel_name||'')}</td>
+      <td><span class="badge ${ok?'badge-green':'badge-red'}">${l.status_code||'—'}</span></td>
+      <td class="text-xs">${l.duration_ms}ms</td>
+      <td class="text-xs" style="color:var(--text3);">${l.prompt_tokens||0}+${l.completion_tokens||0}</td>
+      <td class="text-xs" style="color:#ef4444;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(l.error||'')}</td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="7" style="color:var(--text3);" class="text-center py-8">${t('noLogs')}</td></tr>`;
+}
+
+// ── Detection (model-detective style) ──
+function getProbeNames() { return PROBE_I18N[curLang] || PROBE_I18N.zh; }
+const TIER_COLORS = {S:'badge-green',A:'badge-blue',B:'badge-amber',C:'badge-red',R:'badge-purple'};
+
+function renderScoreBadge(score) {
+  if (score == null) return '<span class="score-badge score-na">—</span>';
+  const cls = score >= 80 ? 'score-high' : score >= 50 ? 'score-mid' : 'score-low';
+  return `<span class="score-badge ${cls}">${score}/100</span>`;
+}
+function renderConfLabel(score) {
+  if (score == null) return '';
+  const label = score >= 80 ? t('highConf') : score >= 50 ? t('midConf') : t('lowConf');
+  return `<div style="font-size:11px;color:var(--text3);margin-top:3px;">${label}</div>`;
+}
+function generateReasonSummary(r) {
+  if (!r || !r.probes) return '';
+  const zh = curLang === 'zh';
+  const p = r.probes;
+  const reasons = [];
+
+  // Capability failures
+  const capFails = [];
+  if (p.math?.pass === false) capFails.push(zh ? '数学' : 'Math');
+  if (p.logic?.pass === false) capFails.push(zh ? '逻辑' : 'Logic');
+  if (p.strawberry?.pass === false) capFails.push(zh ? '字符' : 'Char');
+  if (p.knowledge?.pass === false) capFails.push(zh ? '知识' : 'Know');
+  if (capFails.length >= 3) reasons.push(zh ? `${capFails.join('/')}全挂` : `${capFails.join('/')} all failed`);
+  else if (capFails.length > 0) reasons.push(zh ? `${capFails.join('/')}未通过` : `${capFails.join('/')} failed`);
+
+  // Token usage anomaly
+  if (p.tokenUsage?.pass === false) {
+    const m = p.tokenUsage.summary?.match(/(\d+)\s*tok.*?(\d+-\d+)/);
+    reasons.push(m ? (zh ? `Token${m[1]}→预期${m[2]}` : `Tok ${m[1]}→exp ${m[2]}`) : (zh ? 'Token异常' : 'Token anomaly'));
+  }
+
+  // Tokenizer mismatch
+  if (p.tokenizer?.pass === false) reasons.push(zh ? 'Tokenizer族不符' : 'Tokenizer mismatch');
+
+  // Family mismatch
+  if (r.suspectFamily) reasons.push(zh ? `疑似${r.suspectFamily}` : `Suspect: ${r.suspectFamily}`);
+  else if (r.family === 'unknown' && r.claimedFamily) reasons.push(zh ? '家族未确认' : 'Family unconfirmed');
+
+  // All pass
+  if (reasons.length === 0) {
+    const passCount = Object.values(p).filter(v => v && v.pass === true).length;
+    const totalCount = Object.values(p).filter(v => v && (v.pass === true || v.pass === false)).length;
+    if (passCount > 0) reasons.push(zh ? `${passCount}/${totalCount}项通过` : `${passCount}/${totalCount} passed`);
+  }
+
+  return reasons.slice(0, 3).join(zh ? '，' : ', ');
+}
+function renderVerdict(r) {
+  if (!r) return '<span style="color:#475569;font-size:12px;">—</span>';
+  let v = r.verdict;
+  if (!v && r.score != null) {
+    if (r.suspectFamily) v = 'family_mismatch';
+    else if (r.score >= 80) v = 'pass';
+    else v = 'weak';
+  }
+  if (!v) return '<span style="color:#475569;font-size:12px;">—</span>';
+  const reason = generateReasonSummary(r);
+  const reasonHtml = reason ? `<div style="font-size:10px;color:#94a3b8;margin-top:3px;max-width:180px;line-height:1.3;">${esc(reason)}</div>` : '';
+  if (v === 'pass') return `<span class="suspect-tag suspect-match">✓ ${t('verdictPass')}</span>${reasonHtml}`;
+  if (v === 'family_mismatch') return `<span class="suspect-tag suspect-mismatch">✗ ${t('verdictFamilyMismatch')}: ${esc(r.suspectFamily || r.family || '?')}</span>${reasonHtml}`;
+  if (v === 'weak') return `<span class="suspect-tag" style="background:rgba(234,179,8,.15);color:#eab308;border-color:rgba(234,179,8,.3);">⚠ ${t('verdictWeak')}</span>${reasonHtml}`;
+  return `<span class="suspect-tag" style="background:rgba(148,163,184,.1);color:#94a3b8;">— ${t('verdictInsufficient')}</span>${reasonHtml}`;
+}
+function renderProbeDetail(probes) {
+  const pn = getProbeNames();
+  if (!probes || !Object.keys(probes).length) return `<div class="text-xs" style="color:var(--text3);padding:8px 0;">${t('noProbeData')}</div>`;
+  const allKeys = Object.keys(pn);
+  const items = allKeys.filter(k => probes[k]).map(k => {
+    const v = probes[k];
+    const cls = v.pass === true ? 'probe-pass' : v.pass === false ? 'probe-fail' : 'probe-warn';
+    const icon = v.pass === true ? '✓' : v.pass === false ? '✗' : '⚠';
+    return `<div class="detail-item"><span class="detail-label">${pn[k]}</span><span class="detail-value ${cls}" title="${esc(v.detail||v.summary||'')}">${icon} ${esc(v.summary||'')}</span></div>`;
+  });
+  return `<div class="detail-grid">${items.join('')}</div>`;
+}
+function toggleDetectDetail(key) {
+  const row = document.getElementById('drow-' + key);
+  if (!row) return;
+  row.classList.toggle('open');
+  const btn = row.previousElementSibling?.querySelector('.expand-btn');
+  if (btn) btn.textContent = row.classList.contains('open') ? '▾' : '▸';
+}
+
+async function loadDetectTab() {
+  const hdr = document.getElementById('detectPageTitle');
+  if (hdr) hdr.textContent = t('detectTitle');
+  const desc = document.getElementById('detectPageDesc');
+  if (desc) desc.textContent = t('detectDesc');
+  const discl = document.getElementById('detectDisclaimer');
+  if (discl) discl.textContent = t('detectDisclaimer');
+  const btnAll = document.getElementById('btnDetectAll');
+  if (btnAll && !_detectRunning) btnAll.textContent = t('detectAll');
+  const btnRef = document.getElementById('btnDetectRefresh');
+  if (btnRef) btnRef.textContent = t('refresh');
+  // i18n detect settings
+  const dst = document.getElementById('detectSettingsTitle');
+  if (dst) dst.textContent = curLang==='zh'?'检测设置':'Detection Settings';
+  const lsr = document.getElementById('lbl_sampleRate');
+  if (lsr) lsr.textContent = curLang==='zh'?'被动采样率':'Sample Rate';
+  const lci = document.getElementById('lbl_cronInterval');
+  if (lci) lci.textContent = curLang==='zh'?'定时检测（小时）':'Cron Interval (h)';
+  const ldt = document.getElementById('lbl_degradeThreshold');
+  if (ldt) ldt.textContent = curLang==='zh'?'降级阈值':'Degrade Threshold';
+  const lda = document.getElementById('lbl_degradeAction');
+  if (lda) lda.textContent = curLang==='zh'?'降级动作':'Degrade Action';
+  const odw = document.getElementById('opt_degradeWeight');
+  if (odw) odw.textContent = curLang==='zh'?'降低权重':'Lower Weight';
+  const odd = document.getElementById('opt_degradeDisable');
+  if (odd) odd.textContent = curLang==='zh'?'禁用渠道':'Disable Channel';
+  const bsd = document.getElementById('btnSaveDetectCfg');
+  if (bsd) bsd.textContent = curLang==='zh'?'保存':'Save';
+
+  const ch = await api('GET', '/admin/channels');
+  const channels = ch.channels || [];
+  if (!channels.length) {
+    document.getElementById('detectContent').innerHTML = `<div style="color:var(--text3);" class="text-center py-8">${t('noChannels')}</div>`;
+    document.getElementById('detectSummaryBar').style.display = 'none';
+    return;
+  }
+  let html = '';
+  let _totalModels = 0, _testedModels = 0, _passModels = 0, _riskModels = 0, _allScores = [];
+  for (const c of channels) {
+    const det = await api('GET', `/admin/detect/${c.id}`);
+    const results = det.results || [];
+    const latest = {};
+    for (const r of results) { if (!latest[r.model]) latest[r.model] = r; }
+    const models = c.models || [];
+    const detected = models.filter(m => latest[m]);
+    const avgScore = detected.length ? Math.round(detected.reduce((s,m) => s + (latest[m].score||0), 0) / detected.length) : null;
+
+    _totalModels += models.length;
+    for (const m of models) {
+      const r = latest[m];
+      if (!r) continue;
+      _testedModels++;
+      _allScores.push(r.score || 0);
+      if (r.score >= 70) _passModels++; else _riskModels++;
+    }
+
+    html += `<div class="card" style="padding:0;overflow:hidden;">
+      <div style="padding:16px 20px;border-bottom:1px solid var(--border);">
+        <div class="flex justify-between items-center">
+          <div class="flex items-center gap-3">
+            <span class="font-semibold">${esc(c.name)}</span>
+            <span class="badge ${c.type==='anthropic'?'badge-amber':'badge-blue'}">${c.type}</span>
+            ${avgScore != null ? renderScoreBadge(avgScore) : ''}
+            <span class="text-xs" style="color:var(--text3);">${detected.length}/${models.length} ${t('detected')}</span>
+          </div>
+          <button class="btn btn-outline btn-xs" style="color:#38bdf8;border-color:#0369a1;margin-right:6px;display:none;" onclick="runDetectSelected(${c.id})" id="detectSelBtn${c.id}">${curLang==='zh'?'检测选中':'Detect Selected'}</button>
+          <button class="btn btn-outline btn-xs" style="color:#c084fc;border-color:#7c3aed;margin-right:6px;display:none;" onclick="runDeepDetectSelected(${c.id})" id="deepSelBtn${c.id}">${curLang==='zh'?'深度鉴定':'Deep Detect'}</button>
+          <button class="btn btn-outline btn-xs" style="color:#f59e0b;border-color:#92400e;" onclick="runDetect(${c.id})" id="detectBtn${c.id}">${t('detectAllModels')}</button>
+        </div>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th style="width:28px;"><input type="checkbox" onchange="toggleSelectAll(${c.id}, this.checked)" title="${curLang==='zh'?'全选':'Select all'}"></th><th>${t('model')}</th><th>${t('score')}</th><th>${t('verdict')}</th><th>${t('tier')}</th><th>${t('family')}</th><th>${curLang==='zh'?'Tok相似':'Tok Match'}</th><th>${t('time')}</th><th style="width:60px;"></th></tr></thead>
+        <tbody>
+        ${models.map((m, mi) => {
+          const r = latest[m];
+          const rowKey = `${c.id}-${mi}`;
+          if (!r) return `<tr>
+            <td><input type="checkbox" class="detect-cb-${c.id}" value="${esc(m)}" onchange="updateSelectBtn(${c.id})"></td>
+            <td class="font-mono text-xs">${esc(m)}</td>
+            <td><span class="chip chip-idle">${t('notDetected')}</span></td>
+            <td colspan="5" class="text-xs" style="color:var(--text3);">—</td>
+            <td><button class="btn btn-outline btn-xs" style="font-size:10px;padding:2px 6px;color:#f59e0b;border-color:#92400e;" onclick="runDetectModel(${c.id},'${esc(m)}')" id="dm-${c.id}-${mi}">⚡</button></td>
+          </tr>`;
+          // Extract error reason from probes when score is null
+          const hasError = r.score == null || r.status === 'error' || r.status === 'insufficient';
+          let errorReason = '';
+          if (hasError && r.probes) {
+            const probeVals = Object.values(r.probes);
+            const errProbe = probeVals.find(p => p.summary && p.summary.startsWith('Error:'));
+            if (errProbe) errorReason = errProbe.summary;
+            else if (probeVals.length === 0) errorReason = curLang==='zh' ? '探针无数据返回' : 'No probe data returned';
+          }
+          if (hasError && !errorReason && r.error) errorReason = r.error;
+          if (hasError) {
+            return `<tr>
+              <td><input type="checkbox" class="detect-cb-${c.id}" value="${esc(m)}" onchange="updateSelectBtn(${c.id})"></td>
+              <td class="font-mono text-xs" style="font-weight:510;">${esc(m)}</td>
+              <td><span class="badge badge-red" style="font-size:11px;">${curLang==='zh'?'检测失败':'Failed'}</span></td>
+              <td colspan="4" class="text-xs" style="color:#ef4444;max-width:350px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(errorReason)}">${esc(errorReason || (curLang==='zh'?'未知错误':'Unknown error'))}</td>
+              <td><button class="btn btn-outline btn-xs" style="font-size:10px;padding:2px 6px;color:#f59e0b;border-color:#92400e;" onclick="runDetectModel(${c.id},'${esc(m)}')" id="dm-${c.id}-${mi}">⚡</button> <button class="expand-btn" onclick="toggleDetectDetail('${rowKey}')">▸</button></td>
+            </tr>
+            <tr class="detail-row" id="drow-${rowKey}"><td colspan="9"><div class="detail-panel">
+              ${renderProbeDetail(r.probes)}
+            </div></td></tr>`;
+          }
+          return `<tr>
+            <td><input type="checkbox" class="detect-cb-${c.id}" value="${esc(m)}" onchange="updateSelectBtn(${c.id})"></td>
+            <td class="font-mono text-xs" style="font-weight:510;">${esc(m)}</td>
+            <td>${renderScoreBadge(r.score)}${renderConfLabel(r.score)}</td>
+            <td>${renderVerdict(r)}</td>
+            <td><span class="badge ${TIER_COLORS[r.tier]||'badge-blue'}">${r.tier||'?'}</span></td>
+            <td class="text-xs">${r.family && r.family !== 'unknown' ? `<span style="color:#e2e8f0;">${esc(r.family)}</span>` : r.claimedFamily ? `<span style="color:#64748b;" title="${curLang==='zh'?'未验证，仅基于模型名':'Unverified, based on model name'}">${esc(r.claimedFamily)} <span style="font-size:10px;opacity:.6;">${curLang==='zh'?'(声称)':'(claimed)'}</span></span>` : '<span style="color:#475569;">unknown</span>'}</td>
+            <td class="text-xs">${(()=>{ const mf = r.probes?.tokenizer?.matchedFamilies; if (!mf || !mf.length) return '<span style="color:#475569;">—</span>'; const display = mf.filter(f => f !== r.claimedFamily && f !== r.family).slice(0, 4); if (!display.length) return `<span style="color:#22c55e;font-size:10px;">✓ ${esc(r.claimedFamily || r.family || mf[0])}</span>`; return display.map(f => `<span style="color:#f59e0b;font-size:10px;">${esc(f)}</span>`).join(' '); })()}</td>
+            <td class="text-xs text-gray-500">${new Date(r.ts).toLocaleString()}</td>
+            <td><button class="btn btn-outline btn-xs" style="font-size:10px;padding:2px 6px;color:#f59e0b;border-color:#92400e;" onclick="runDetectModel(${c.id},'${esc(m)}')" id="dm-${c.id}-${mi}">⚡</button> <button class="expand-btn" onclick="toggleDetectDetail('${rowKey}')">▸</button></td>
+          </tr>
+          <tr class="detail-row" id="drow-${rowKey}"><td colspan="9"><div class="detail-panel">
+            ${renderProbeDetail(r.probes)}
+            ${r.family ? `<div style="margin-top:10px;font-size:12px;color:#94a3b8;">Family: <strong style="color:#e2e8f0;">${esc(r.family)}</strong> · Tier: <strong style="color:#e2e8f0;">${esc(r.tier||'?')}</strong></div>` : ''}
+          </div></td></tr>`;
+        }).join('')}
+        </tbody>
+      </table></div>
+    </div>`;
+  }
+  document.getElementById('detectContent').innerHTML = html;
+
+  // Render summary bar
+  const summaryBar = document.getElementById('detectSummaryBar');
+  if (_testedModels > 0) {
+    const avgAll = _allScores.length ? Math.round(_allScores.reduce((a,b) => a+b, 0) / _allScores.length) : 0;
+    const passRate = Math.round(_passModels / _testedModels * 100);
+    const passColor = passRate >= 80 ? '#22c55e' : passRate >= 50 ? '#f59e0b' : '#ef4444';
+    summaryBar.style.display = 'grid';
+    summaryBar.innerHTML = `
+      <div class="stat-card"><div class="stat-label">${t('chTotal')}</div><div class="stat-num">${channels.length}</div></div>
+      <div class="stat-card"><div class="stat-label">${t('modelTotal')}</div><div class="stat-num">${_totalModels}<span style="font-size:11px;color:var(--text3);font-weight:400;margin-left:3px;">(${_testedModels} ${t('detected')})</span></div></div>
+      <div class="stat-card glow-green"><div class="stat-label">${t('detectPass')}</div><div class="stat-num" style="color:#22c55e;">${_passModels}</div></div>
+      <div class="stat-card ${_riskModels?'glow-red':''}"><div class="stat-label">${t('detectRisk')}</div><div class="stat-num" style="color:${_riskModels?'#ef4444':'#22c55e'};">${_riskModels}</div></div>
+      <div class="stat-card"><div class="stat-label">${t('avgScoreLabel')}</div><div class="stat-num" style="color:${passColor};">${avgAll}<span style="font-size:12px;font-weight:400;">/100</span></div><div class="stat-sub" style="color:${passColor};">${passRate}% pass</div></div>
+    `;
+  } else {
+    summaryBar.style.display = 'none';
+  }
+}
+
+// ── Detect Settings & Summary ──
+function toggleDetectSettings() {
+  const panel = document.getElementById('detectSettingsPanel');
+  if (panel.style.display === 'none') {
+    panel.style.display = 'block';
+    loadDetectConfig();
+  } else {
+    panel.style.display = 'none';
+  }
+}
+
+async function loadDetectConfig() {
+  const d = await api('GET', '/admin/detect-config');
+  document.getElementById('cfg_sampleRate').value = d.sampleRate || '';
+  document.getElementById('cfg_cronInterval').value = d.cronIntervalHours || '';
+  document.getElementById('cfg_degradeThreshold').value = d.degradeThreshold || '';
+  document.getElementById('cfg_degradeAction').value = d.degradeAction || 'weight';
+}
+
+async function saveDetectConfig() {
+  const d = await api('PUT', '/admin/detect-config', {
+    sampleRate: parseFloat(document.getElementById('cfg_sampleRate').value) || 0,
+    cronIntervalHours: parseInt(document.getElementById('cfg_cronInterval').value) || 0,
+    degradeThreshold: parseInt(document.getElementById('cfg_degradeThreshold').value) || 0,
+    degradeAction: document.getElementById('cfg_degradeAction').value,
+  });
+  if (d.error) { toast(d.error, 'red'); return; }
+  toast(curLang === 'zh' ? '检测设置已保存' : 'Detection settings saved', 'green');
+  document.getElementById('detectSettingsPanel').style.display = 'none';
+}
+
+let _detectRunning = false;
+async function runDetect(channelId) {
+  if (_detectRunning) { toast(t('detectRunning'), 'amber'); return; }
+  _detectRunning = true;
+  const btn = document.getElementById('detectBtn' + channelId);
+  if (btn) { btn.disabled = true; btn.innerHTML = `<span class="spin"></span> ${t('detecting')}`; }
+  const pw = document.getElementById('detectProgress');
+  const pb = document.getElementById('detectProgressBar');
+  pw.classList.add('on'); pb.style.width = '10%';
+  toast(t('detectStarted'), 'amber', 10000);
+  try {
+    pb.style.width = '30%';
+    const d = await api('POST', `/admin/channels/${channelId}/detect`);
+    pb.style.width = '90%';
+    if (d.error) { toast(d.error, 'red'); return; }
+    const results = d.results || (d.result ? [d.result] : []);
+    toast(`${t('detectDone')} ${results.length} ${t('modelCount')}`, 'green', 5000);
+    pb.style.width = '100%';
+    setTimeout(() => { pw.classList.remove('on'); pb.style.width = '0%'; }, 600);
+    loadDetectTab();
+  } catch (e) { toast(t('detectFailed') + ': ' + e.message, 'red'); }
+  finally {
+    _detectRunning = false;
+    if (btn) { btn.disabled = false; btn.innerHTML = t('detectAllModels'); }
+    setTimeout(() => { pw.classList.remove('on'); }, 800);
+  }
+}
+
+async function detectAll() {
+  if (_detectRunning) { toast(t('detectRunning'), 'amber'); return; }
+  if (!confirm(t('detectAllConfirm'))) return;
+  _detectRunning = true;
+  const btn = document.getElementById('btnDetectAll');
+  if (btn) { btn.disabled = true; btn.innerHTML = `<span class="spin"></span> ${t('detecting')}...`; }
+  const pw = document.getElementById('detectProgress');
+  const pb = document.getElementById('detectProgressBar');
+  pw.classList.add('on'); pb.style.width = '5%';
+  toast(t('detectAllStarted'), 'amber', 15000);
+  await api('POST', '/admin/detect/all');
+  pb.style.width = '100%';
+  toast(t('detectAllDone'), 'green', 3000);
+  setTimeout(async () => {
+    pw.classList.remove('on'); pb.style.width = '0%';
+    _detectRunning = false;
+    if (btn) { btn.disabled = false; btn.textContent = t('detectAll'); }
+    loadDetectTab();
+  }, 1000);
+}
+
+// ── Single model detect ──
+async function runDetectModel(channelId, modelId) {
+  const btn = event?.target;
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+  const pw = document.getElementById('detectProgress');
+  const pb = document.getElementById('detectProgressBar');
+  pw.classList.add('on'); pb.style.width = '30%';
+  try {
+    const d = await api('POST', `/admin/channels/${channelId}/detect`, { model: modelId });
+    pb.style.width = '100%';
+    if (d.error) { toast(d.error, 'red'); return; }
+    toast(`${esc(modelId)}: ${curLang==='zh'?'检测完成':'Done'}`, 'green', 3000);
+    setTimeout(() => { pw.classList.remove('on'); pb.style.width = '0%'; }, 500);
+    loadDetectTab();
+  } catch (e) { toast(`${esc(modelId)}: ${e.message}`, 'red'); }
+  finally {
+    if (btn) { btn.disabled = false; btn.textContent = '⚡'; }
+    setTimeout(() => { pw.classList.remove('on'); }, 800);
+  }
+}
+
+// ── Deep detect single model ──
+async function runDeepDetect(channelId, modelId) {
+  const btn = event?.target;
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+  toast(curLang==='zh'?`深度鉴定 ${modelId} 中... (~30s)`:`Deep detecting ${modelId}... (~30s)`, 'amber', 30000);
+  try {
+    const d = await api('POST', `/admin/channels/${channelId}/deep-detect`, { model: modelId });
+    if (d.error) { toast(d.error, 'red'); return; }
+    showDeepResult(d.result, d.logs, modelId);
+  } catch (e) { toast(`Deep detect: ${e.message}`, 'red'); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = '🔬'; } }
+}
+
+function showDeepResult(r, logs, modelId) {
+  const zh = curLang === 'zh';
+  const m = r.measured || {};
+  const top = r.candidates?.[0];
+  const conf = r.confidence || {};
+  const bh = r.behavioral || {};
+  const lat = r.latency || {};
+  const tokOk = r.tokReliable !== false;
+  const isBehavioral = conf.level === 'behavioral';
+  const selfMatch = bh.selfIdMatch;
+  const confColor = isBehavioral ? '#a78bfa' : !top ? '#64748b' : conf.level==='exact'?'#22c55e':conf.level==='high'?'#3b82f6':conf.level==='medium'?'#f59e0b':'#ef4444';
+  const confBg = confColor + '18';
+  const sec = `background:#0f172a;border:1px solid #1e293b;border-radius:10px;padding:14px 16px;margin-bottom:14px`;
+
+  let html = `<div style="width:520px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">`;
+
+  // ── Header ──
+  html += `<div style="text-align:center;margin-bottom:20px;">
+    <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#64748b;margin-bottom:6px;">${zh?'深度鉴定报告':'DEEP DETECTION REPORT'}</div>
+    <div style="font-size:20px;font-weight:800;color:#f1f5f9;font-family:monospace;">${esc(modelId)}</div>
+  </div>`;
+
+  // ── Confidence verdict (hero section) ──
+  if (top) {
+    html += `<div style="${sec};border-color:${confColor}50;background:${confBg};">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:48px;height:48px;border-radius:50%;background:${confColor}25;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <span style="font-size:20px;">${conf.level==='exact'?'★':conf.level==='high'?'●':conf.level==='medium'?'◐':'○'}</span>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:700;color:${confColor};">${zh?(conf.label||''):(conf.labelEn||'')}</div>
+          <div style="font-size:17px;font-weight:800;color:#f1f5f9;margin-top:2px;">${esc(top.name)}</div>
+          <div style="font-size:11px;color:#64748b;margin-top:2px;">${zh?'欧氏距离':'Distance'}: <strong style="color:#94a3b8;">${top.distance}</strong> · ${zh?'家族':'Family'}: <strong style="color:#94a3b8;">${top.family}</strong></div>
+        </div>
+      </div>
+    </div>`;
+  } else if (isBehavioral && selfMatch) {
+    // No tokenizer match but behavioral self-ID available
+    html += `<div style="${sec};border-color:#a78bfa50;background:#a78bfa18;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:48px;height:48px;border-radius:50%;background:#a78bfa25;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <span style="font-size:20px;">⚡</span>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:700;color:#a78bfa;">${zh?'行为推断':'Behavioral Inference'}</div>
+          <div style="font-size:17px;font-weight:800;color:#f1f5f9;margin-top:2px;">${esc(selfMatch.name)}</div>
+          <div style="font-size:11px;color:#64748b;margin-top:2px;">${zh?'家族':'Family'}: <strong style="color:#94a3b8;">${selfMatch.family}</strong> · ${zh?'来源: Self-ID 反查':'Source: Self-ID lookup'}</div>
+        </div>
+      </div>
+    </div>`;
+  } else if (conf.level === 'none') {
+    html += `<div style="${sec};border-color:#ef444450;background:#ef444418;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:48px;height:48px;border-radius:50%;background:#ef444425;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <span style="font-size:20px;">?</span>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:700;color:#ef4444;">${zh?'无法识别':'Cannot Identify'}</div>
+          <div style="font-size:12px;color:#94a3b8;margin-top:4px;">${zh?'Tokenizer 和行为测试均未获得有效结果':'Both tokenizer and behavioral tests yielded no valid results'}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // ── Tokenizer fingerprint grid ──
+  const anyMeasured = Object.values(m).some(v => v != null);
+  html += `<div style="${sec}${!tokOk?';opacity:.6':''}">
+    <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">
+      ${zh?'Tokenizer 指纹':'TOKENIZER FINGERPRINT'} <span style="color:#475569;font-weight:400;">— ${zh?'5维差值法':'5-dim delta'}</span>
+      ${!tokOk?`<span style="color:#ef4444;font-weight:600;margin-left:8px;">⚠ ${zh?'渠道 overhead 不稳定':'Unstable overhead'}</span>`:''}
+    </div>`;
+  if (!tokOk && !anyMeasured) {
+    const bl = r.baselines || [];
+    html += `<div style="padding:12px;background:#1e293b;border-radius:8px;text-align:center;">
+      <div style="font-size:12px;color:#f59e0b;margin-bottom:6px;">${zh?'该渠道在请求间注入变长系统提示，导致 token 计数不可靠':'This channel injects variable-length system prompts between requests'}</div>
+      <div style="font-size:11px;color:#64748b;">${zh?'基线漂移':'Baseline drift'}: ${bl.map(b=>b.toLocaleString()).join(' → ')}</div>
+    </div>`;
+  } else {
+    html += `<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;">
+      ${['EN','CN','CODE','NUM','JP'].map((k,i) => {
+        const v = m[k]; const ref = top?.known?.[i];
+        const match = v != null && ref != null && v === ref;
+        const clr = v == null ? '#475569' : match ? '#22c55e' : '#f59e0b';
+        return `<div style="text-align:center;background:#1e293b;border-radius:8px;padding:10px 4px;">
+          <div style="font-size:10px;font-weight:600;color:#64748b;margin-bottom:4px;">${k}</div>
+          <div style="font-size:22px;font-weight:800;color:${clr};line-height:1;">${v??'—'}</div>
+          ${ref!=null?`<div style="font-size:10px;color:#475569;margin-top:4px;">${zh?'参考':'ref'} ${ref}</div>`:''}
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+  html += `</div>`;
+
+  // ── Top candidates ──
+  if (r.candidates?.length) {
+    html += `<div style="${sec}">
+      <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Top ${zh?'候选匹配':'CANDIDATES'}</div>
+      <div style="overflow:hidden;border-radius:6px;border:1px solid #1e293b;">
+        <table style="width:100%;font-size:12px;border-collapse:collapse;">
+          <thead><tr style="background:#1e293b;">
+            <th style="padding:6px 10px;text-align:left;color:#64748b;font-weight:600;font-size:10px;">${zh?'距离':'DIST'}</th>
+            <th style="padding:6px 10px;text-align:left;color:#64748b;font-weight:600;font-size:10px;">${zh?'模型家族':'MODEL'}</th>
+            <th style="padding:6px 8px;text-align:center;color:#64748b;font-weight:600;font-size:10px;">EN</th>
+            <th style="padding:6px 8px;text-align:center;color:#64748b;font-weight:600;font-size:10px;">CN</th>
+            <th style="padding:6px 8px;text-align:center;color:#64748b;font-weight:600;font-size:10px;">NUM</th>
+            <th style="padding:6px 8px;text-align:center;color:#64748b;font-weight:600;font-size:10px;">JP</th>
+          </tr></thead><tbody>`;
+    for (const [ci,c] of (r.candidates||[]).slice(0, 5).entries()) {
+      const bg = ci === 0 ? confBg : ci % 2 ? '#0c1222' : 'transparent';
+      const dc = c.distance < 1 ? '#22c55e' : c.distance < 3 ? '#3b82f6' : c.distance < 6 ? '#f59e0b' : '#64748b';
+      html += `<tr style="background:${bg};border-top:1px solid #1e293b20;">
+        <td style="padding:7px 10px;font-weight:700;color:${dc};">${c.distance < 1 ? '★ ' : ''}${c.distance.toFixed(2)}</td>
+        <td style="padding:7px 10px;color:#e2e8f0;font-weight:${ci===0?700:400};">${esc(c.name)}</td>
+        <td style="padding:7px 8px;text-align:center;color:#94a3b8;">${c.known[0]}</td>
+        <td style="padding:7px 8px;text-align:center;color:#94a3b8;">${c.known[1]}</td>
+        <td style="padding:7px 8px;text-align:center;color:#94a3b8;">${c.known[3]}</td>
+        <td style="padding:7px 8px;text-align:center;color:#94a3b8;">${c.known[4]}</td>
+      </tr>`;
+    }
+    html += `</tbody></table></div></div>`;
+  }
+
+  // ── Behavioral + Latency ──
+  const bhHighlight = isBehavioral || !tokOk;
+  html += `<div style="${sec}${bhHighlight?';border-color:#a78bfa40':''}">
+    <div style="font-size:11px;font-weight:700;color:${bhHighlight?'#a78bfa':'#64748b'};text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">
+      ${zh?'行为指纹 & 延迟':'BEHAVIORAL & LATENCY'}${bhHighlight?` <span style="font-size:9px;color:#a78bfa80;">${zh?'— 主要鉴定依据':'— PRIMARY'}</span>`:''}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+      <div style="background:#1e293b;border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:10px;color:#64748b;">strawberry r</div>
+        <div style="font-size:18px;font-weight:800;color:${bh.strawberry===3?'#22c55e':'#ef4444'};margin-top:2px;">${bh.strawberry??'—'}</div>
+        <div style="font-size:9px;color:#475569;margin-top:2px;">${bh.strawberry===3?(zh?'正确':'correct'):(zh?'错误':'wrong')}</div>
+      </div>
+      <div style="background:#1e293b;border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:10px;color:#64748b;">13 × 17</div>
+        <div style="font-size:18px;font-weight:800;color:${bh.math===221?'#22c55e':'#ef4444'};margin-top:2px;">${bh.math??'—'}</div>
+        <div style="font-size:9px;color:#475569;margin-top:2px;">${bh.math===221?(zh?'正确':'correct'):(zh?'错误':'wrong')}</div>
+      </div>
+      <div style="background:#1e293b;border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:10px;color:#64748b;">${zh?'平均延迟':'Avg Latency'}</div>
+        <div style="font-size:18px;font-weight:800;color:#3b82f6;margin-top:2px;">${lat.avgMs??'—'}<span style="font-size:11px;font-weight:400;">ms</span></div>
+        <div style="font-size:9px;color:#475569;margin-top:2px;">${lat.tier?.label||'—'}</div>
+      </div>
+    </div>
+    ${bh.selfId?`<div style="margin-top:10px;padding:8px 12px;background:#1e293b;border-radius:6px;font-size:11px;${selfMatch?'border:1px solid #a78bfa30;':''}">
+      <span style="color:#64748b;">${zh?'自报身份':'Self-ID'}:</span> <span style="color:#cbd5e1;">${esc(bh.selfId)}</span>
+      ${selfMatch?`<span style="color:#a78bfa;margin-left:8px;">→ ${esc(selfMatch.name)}</span>`:''}
+    </div>`:''}
+  </div>`;
+
+  html += `</div>`;
+
+  // ── Modal ──
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;animation:fadeIn .2s;';
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  const modal = document.createElement('div');
+  modal.style.cssText = 'background:#0b1120;border:1px solid #1e293b;border-radius:16px;padding:28px;max-height:85vh;overflow-y:auto;box-shadow:0 25px 80px rgba(0,0,0,.7),0 0 40px rgba(59,130,246,.08);';
+  modal.innerHTML = html + `<div style="text-align:center;margin-top:16px;"><button class="btn btn-outline btn-xs" onclick="this.closest('[style*=fixed]').remove()" style="padding:8px 28px;border-radius:8px;font-size:12px;">${zh?'关闭':'Close'}</button></div>`;
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+}
+
+// ── Batch deep detect selected models ──
+async function runDeepDetectSelected(channelId) {
+  const cbs = document.querySelectorAll(`.detect-cb-${channelId}:checked`);
+  const models = [...cbs].map(cb => cb.value);
+  if (!models.length) { toast(curLang==='zh'?'请先勾选要鉴定的模型':'Select models first', 'amber'); return; }
+  const btn = document.getElementById('deepSelBtn' + channelId);
+  if (btn) { btn.disabled = true; btn.innerHTML = `<span class="spin"></span> 0/${models.length}`; }
+  let done = 0;
+  for (const m of models) {
+    try {
+      const d = await api('POST', `/admin/channels/${channelId}/deep-detect`, { model: m });
+      if (d.result) showDeepResult(d.result, d.logs, m);
+    } catch (_) {}
+    done++;
+    if (btn) btn.innerHTML = `<span class="spin"></span> ${done}/${models.length}`;
+  }
+  toast(`${curLang==='zh'?'深度鉴定完成':'Deep detect done'}: ${done}/${models.length}`, 'green', 3000);
+  if (btn) { btn.disabled = false; btn.textContent = curLang==='zh'?'深度鉴定':'Deep Detect'; }
+}
+
+// ── Batch detect selected models ──
+async function runDetectSelected(channelId) {
+  const cbs = document.querySelectorAll(`.detect-cb-${channelId}:checked`);
+  const models = [...cbs].map(cb => cb.value);
+  if (!models.length) { toast(curLang==='zh'?'请先勾选要检测的模型':'Select models first', 'amber'); return; }
+  const btn = document.getElementById('detectSelBtn' + channelId);
+  if (btn) { btn.disabled = true; btn.innerHTML = `<span class="spin"></span> 0/${models.length}`; }
+  const pw = document.getElementById('detectProgress');
+  const pb = document.getElementById('detectProgressBar');
+  pw.classList.add('on'); pb.style.width = '5%';
+  let done = 0;
+  for (const m of models) {
+    try {
+      await api('POST', `/admin/channels/${channelId}/detect`, { model: m });
+    } catch (_) {}
+    done++;
+    pb.style.width = `${Math.round(done / models.length * 95 + 5)}%`;
+    if (btn) btn.innerHTML = `<span class="spin"></span> ${done}/${models.length}`;
+  }
+  pb.style.width = '100%';
+  toast(`${curLang==='zh'?'批量检测完成':'Batch done'}: ${done}/${models.length}`, 'green', 3000);
+  setTimeout(() => { pw.classList.remove('on'); pb.style.width = '0%'; }, 500);
+  if (btn) { btn.disabled = false; btn.textContent = curLang==='zh'?'检测选中':'Detect Selected'; }
+  loadDetectTab();
+}
+
+function toggleSelectAll(channelId, checked) {
+  document.querySelectorAll(`.detect-cb-${channelId}`).forEach(cb => { cb.checked = checked; });
+  updateSelectBtn(channelId);
+}
+
+function updateSelectBtn(channelId) {
+  const cbs = document.querySelectorAll(`.detect-cb-${channelId}:checked`);
+  const n = cbs.length;
+  const btn = document.getElementById('detectSelBtn' + channelId);
+  if (btn) {
+    btn.style.display = n > 0 ? 'inline-flex' : 'none';
+    btn.textContent = n > 0 ? `${curLang==='zh'?'检测选中':'Detect Selected'} (${n})` : '';
+  }
+  const deepBtn = document.getElementById('deepSelBtn' + channelId);
+  if (deepBtn) {
+    deepBtn.style.display = n > 0 ? 'inline-flex' : 'none';
+    deepBtn.textContent = n > 0 ? `${curLang==='zh'?'深度鉴定':'Deep Detect'} (${n})` : '';
+  }
+}
+
+// ══════════════════════════════════════════
+// API KEYS
+// ══════════════════════════════════════════
+async function loadUsers() {
+  const hdr = document.getElementById('keyMgmtTitle');
+  if (hdr) hdr.textContent = curLang==='zh' ? 'API 密钥管理' : 'API Key Management';
+  const bak = document.getElementById('btnAddKey');
+  if (bak) bak.textContent = curLang==='zh'?'+ 新建密钥':'+ New Key';
+  const d = await api('GET', '/admin/keys');
+  const keys = d.keys || [];
+  if (!keys.length) {
+    document.getElementById('usersList').innerHTML = `<div class="card text-center py-8"><p style="color:var(--text3);" class="mb-3">${curLang==='zh'?'暂无密钥':'No API keys yet'}</p><button class="btn btn-primary btn-sm" onclick="showAddKey()">${curLang==='zh'?'创建第一个密钥':'Create first key'}</button></div>`;
+    return;
+  }
+  document.getElementById('usersList').innerHTML = `<div class="card" style="padding:0;overflow:hidden;"><div class="table-wrap"><table>
+    <thead><tr><th>Key</th><th>${curLang==='zh'?'名称':'Name'}</th><th>${curLang==='zh'?'状态':'Status'}</th><th>${curLang==='zh'?'配额':'Quota'}</th><th>${curLang==='zh'?'已用':'Used'}</th><th>${curLang==='zh'?'速率':'Rate'}</th><th>${curLang==='zh'?'最后使用':'Last Used'}</th><th>${curLang==='zh'?'创建时间':'Created'}</th><th>${curLang==='zh'?'操作':'Actions'}</th></tr></thead>
+    <tbody>${keys.map(k => `<tr>
+      <td class="font-mono text-xs"><span style="cursor:pointer;user-select:all;" title="${curLang==='zh'?'点击复制完整密钥':'Click to copy full key'}" onclick="navigator.clipboard.writeText('${k.key||''}');toast('${curLang==='zh'?'已复制':'Copied'}','green')">${esc(k.key_preview||'sk-tg-...')} <span style="opacity:.4;font-size:10px;">📋</span></span></td>
+      <td class="text-xs">${esc(k.name||'—')}</td>
+      <td><span class="badge ${k.status==='active'?'badge-green':'badge-red'}">${k.status}</span></td>
+      <td class="text-xs">${fmtQuota(0, k.quota_total)}</td>
+      <td class="text-xs">${k.quota_total > 0 ? `${fmtQuota(k.quota_used, k.quota_total)}` : (k.quota_used > 0 ? `${(k.quota_used/1000).toFixed(1)}K` : '0')}</td>
+      <td class="text-xs text-gray-400">${k.rate_limit}/min</td>
+      <td class="text-xs text-gray-500">${k.last_used_at ? new Date(k.last_used_at).toLocaleString() : '—'}</td>
+      <td class="text-xs text-gray-500">${new Date(k.created_at).toLocaleDateString()}</td>
+      <td><div class="flex gap-1">
+        <button class="btn btn-outline btn-xs" onclick="editKey(${k.id})">${curLang==='zh'?'编辑':'Edit'}</button>
+        <button class="btn btn-danger btn-xs" onclick="delKey(${k.id})">${curLang==='zh'?'删除':'Del'}</button>
+      </div></td>
+    </tr>`).join('')}</tbody>
+  </table></div></div>`;
+}
+
+function showAddKey() {
+  showModal(curLang==='zh'?'新建 API 密钥':'Create API Key', `
+    <div class="space-y-3">
+      <div><label class="text-xs text-gray-400">${curLang==='zh'?'密钥名称':'Key Name'}</label><input id="nk_name" placeholder="${curLang==='zh'?'例如：樱子Bot':'e.g. My Bot'}"></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="text-xs text-gray-400">Token ${curLang==='zh'?'配额 (-1=无限)':'Quota (-1=unlimited)'}</label><input id="nk_quota" type="number" value="-1"></div>
+        <div><label class="text-xs text-gray-400">${curLang==='zh'?'速率限制 (次/分)':'Rate Limit (/min)'}</label><input id="nk_rate" type="number" value="60"></div>
+      </div>
+      <button class="btn btn-primary w-full mt-2" onclick="submitAddKey()">${curLang==='zh'?'生成密钥':'Generate Key'}</button>
+    </div>
+  `);
+}
+
+async function submitAddKey() {
+  const d = await api('POST', '/admin/keys', {
+    name: document.getElementById('nk_name').value.trim(),
+    quota: parseInt(document.getElementById('nk_quota').value),
+    rateLimit: parseInt(document.getElementById('nk_rate').value),
+  });
+  if (d.error) { toast(d.error, 'red'); return; }
+  showModal(curLang==='zh'?'密钥已生成':'Key Generated', `
+    <div class="space-y-3">
+      <p class="text-sm" style="color:#f59e0b;">${curLang==='zh'?'请立即复制此密钥，关闭后无法再次查看完整内容':'Copy this key now. It cannot be viewed again after closing.'}</p>
+      <div class="relative">
+        <input id="newKeyDisplay" readonly value="${d.key.key}" class="font-mono text-sm pr-16" style="background:var(--bg);color:var(--text);border:1px solid var(--border);user-select:all;">
+        <button class="btn btn-outline btn-xs absolute right-2 top-2" onclick="navigator.clipboard.writeText('${d.key.key}');toast('${curLang==='zh'?'已复制':'Copied'}','green')">${curLang==='zh'?'复制':'Copy'}</button>
+      </div>
+      <button class="btn btn-outline w-full" onclick="closeModal();loadUsers()">${curLang==='zh'?'完成':'Done'}</button>
+    </div>
+  `);
+}
+
+async function editKey(id) {
+  const d = await api('GET', `/admin/keys/${id}`);
+  const k = d.key;
+  if (!k) { toast(curLang==='zh'?'密钥不存在':'Key not found', 'red'); return; }
+  showModal(`${curLang==='zh'?'编辑密钥':'Edit Key'}: ${esc(k.key_preview)}`, `
+    <div class="space-y-3">
+      <div><label class="text-xs text-gray-400">${curLang==='zh'?'名称':'Name'}</label><input id="ek_name" value="${esc(k.name||'')}" placeholder="${curLang==='zh'?'名称':'Name'}"></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="text-xs text-gray-400">${curLang==='zh'?'状态':'Status'}</label><select id="ek_status"><option value="active" ${k.status==='active'?'selected':''}>${curLang==='zh'?'启用':'Active'}</option><option value="disabled" ${k.status!=='active'?'selected':''}>${curLang==='zh'?'禁用':'Disabled'}</option></select></div>
+        <div><label class="text-xs text-gray-400">Token ${curLang==='zh'?'配额':'Quota'}</label><input id="ek_quota" type="number" value="${k.quota_total}"></div>
+      </div>
+      <div><label class="text-xs text-gray-400">${curLang==='zh'?'速率限制 (次/分)':'Rate Limit (/min)'}</label><input id="ek_rate" type="number" value="${k.rate_limit}"></div>
+      <button class="btn btn-primary w-full mt-2" onclick="submitEditKey(${id})">${curLang==='zh'?'保存':'Save'}</button>
+    </div>
+  `);
+}
+
+async function submitEditKey(id) {
+  await api('PUT', `/admin/keys/${id}`, {
+    name: document.getElementById('ek_name').value.trim(),
+    status: document.getElementById('ek_status').value,
+    quota_total: parseInt(document.getElementById('ek_quota').value),
+    rate_limit: parseInt(document.getElementById('ek_rate').value),
+  });
+  toast(curLang==='zh'?'密钥已更新':'Key updated', 'green'); closeModal(); loadUsers();
+}
+
+async function delKey(id) {
+  if (!confirm(curLang==='zh'?'确定删除此密钥？':'Delete this key?')) return;
+  await api('DELETE', `/admin/keys/${id}`);
+  toast(curLang==='zh'?'已删除':'Deleted', 'green'); loadUsers();
+}
+
+// ── Config reload ──
+async function reloadConfig() {
+  const d = await api('POST', '/admin/config/reload');
+  if (d.error) { toast(d.error, 'red'); return; }
+  toast(`${t('configReloaded')}: ${d.channels} ${t('channels')}, ${d.models} ${t('models')}`, 'green'); loadChannels();
+}
+
+// ── Utils ──
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+function showModal(title, html) {
+  document.getElementById('modalContent').innerHTML = `<div class="flex justify-between items-center mb-5"><h3 class="text-lg font-semibold">${title}</h3><button class="btn btn-ghost btn-xs" onclick="closeModal()">✕</button></div>${html}`;
+  document.getElementById('modalOverlay').style.display = 'flex';
+}
+function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
+let _toastCount = 0;
+function toast(msg, color = 'blue', ms = 3000) {
+  const isDark = curTheme === 'dark';
+  const bg = isDark
+    ? { green:'#052e16', red:'#450a0a', blue:'#0c1a3d', amber:'#451a03' }
+    : { green:'#f0fdf4', red:'#fef2f2', blue:'#eff6ff', amber:'#fffbeb' };
+  const bd = { green:'#22c55e', red:'#ef4444', blue:'#6366f1', amber:'#f59e0b' };
+  const textC = isDark ? '#fff' : { green:'#166534', red:'#991b1b', blue:'#1e40af', amber:'#92400e' }[color] || '#1a1a2e';
+  const offset = _toastCount * 60;
+  _toastCount++;
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.style.cssText = `background:${bg[color]||bg.blue};border:1px solid ${bd[color]||bd.blue};color:${typeof textC==='string'?textC:textC};top:${20+offset}px;`;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => { el.remove(); _toastCount = Math.max(0, _toastCount-1); }, ms);
+}
+function openMobileNav() { document.querySelector('.sidebar').classList.add('open'); document.getElementById('mobileOverlay').style.display='block'; }
+function closeMobileNav() { document.querySelector('.sidebar').classList.remove('open'); document.getElementById('mobileOverlay').style.display='none'; }
+
+// ── Update System ──────────────────────────────────────────────
+function openUpdateModal() {
+  document.getElementById('updateModal').style.display = 'flex';
+  document.getElementById('updateModalTitle').textContent = t('updateCheck');
+  document.getElementById('updateCurrentLabel').textContent = t('updateCurrent');
+  document.getElementById('updateLatestLabel').textContent = t('updateLatest');
+  document.getElementById('updateChangelogLabel').textContent = t('updateChangelog');
+  document.getElementById('btnDoUpdate').textContent = t('updateNow');
+  document.getElementById('updateLoading').style.display = '';
+  document.getElementById('updateResult').style.display = 'none';
+  document.getElementById('updateProgress').style.display = 'none';
+  checkUpdate();
+}
+
+function closeUpdateModal() {
+  document.getElementById('updateModal').style.display = 'none';
+}
+
+async function checkUpdate() {
+  try {
+    const resp = await fetch('/admin/check-update', { headers: { Authorization: 'Bearer ' + TOKEN } });
+    const data = await resp.json();
+    document.getElementById('updateLoading').style.display = 'none';
+    document.getElementById('updateResult').style.display = '';
+
+    document.getElementById('updateCurrentVer').textContent = 'v' + data.current;
+    document.getElementById('updateLatestVer').textContent = 'v' + (data.latest || data.current);
+
+    const statusEl = document.getElementById('updateStatusMsg');
+    statusEl.style.display = '';
+
+    if (data.note) {
+      statusEl.textContent = t('updateNoRepo');
+      statusEl.style.background = 'var(--bg2)';
+      statusEl.style.color = 'var(--text2)';
+      document.getElementById('updateActions').style.display = 'none';
+    } else if (data.hasUpdate) {
+      statusEl.textContent = t('updateAvailable');
+      statusEl.style.background = 'rgba(99,102,241,0.15)';
+      statusEl.style.color = '#818cf8';
+      document.getElementById('updateLatestVer').style.color = '#818cf8';
+      document.getElementById('updateActions').style.display = 'flex';
+      if (data.changelog) {
+        document.getElementById('updateChangelogWrap').style.display = '';
+        document.getElementById('updateChangelogText').textContent = data.changelog;
+      }
+    } else {
+      statusEl.innerHTML = '✓ ' + t('updateUpToDate');
+      statusEl.style.background = 'rgba(34,197,94,0.15)';
+      statusEl.style.color = '#22c55e';
+      document.getElementById('updateActions').style.display = 'none';
+    }
+  } catch (err) {
+    document.getElementById('updateLoading').style.display = 'none';
+    document.getElementById('updateResult').style.display = '';
+    const statusEl = document.getElementById('updateStatusMsg');
+    statusEl.style.display = '';
+    statusEl.textContent = err.message;
+    statusEl.style.background = 'rgba(239,68,68,0.15)';
+    statusEl.style.color = '#ef4444';
+  }
+}
+
+async function doUpdate() {
+  document.getElementById('updateResult').style.display = 'none';
+  document.getElementById('updateProgress').style.display = '';
+  document.getElementById('updateProgressMsg').textContent = t('updateUpdating');
+  document.getElementById('updateProgressDetail').textContent = 'git pull + npm install...';
+
+  try {
+    const resp = await fetch('/admin/update', { method: 'POST', headers: { Authorization: 'Bearer ' + TOKEN } });
+    const data = await resp.json();
+
+    if (data.success) {
+      document.getElementById('updateProgressMsg').textContent = t('updateSuccess');
+      document.getElementById('updateProgressDetail').textContent = data.pullOutput || '';
+      document.getElementById('sidebarVersion').textContent = 'v' + data.newVersion + ' ⟳';
+      setTimeout(() => waitForRestart(), 2000);
+    } else {
+      document.getElementById('updateProgressMsg').textContent = t('updateFailed');
+      document.getElementById('updateProgressDetail').textContent = data.error || '';
+    }
+  } catch (err) {
+    document.getElementById('updateProgressMsg').textContent = t('updateReconnect');
+    document.getElementById('updateProgressDetail').textContent = '';
+    setTimeout(() => waitForRestart(), 3000);
+  }
+}
+
+function waitForRestart() {
+  document.getElementById('updateProgressMsg').textContent = t('updateReconnect');
+  let attempts = 0;
+  const iv = setInterval(async () => {
+    attempts++;
+    try {
+      const resp = await fetch('/health');
+      if (resp.ok) {
+        clearInterval(iv);
+        toast(t('updateSuccess'), 'green');
+        closeUpdateModal();
+        location.reload();
+      }
+    } catch (e) {}
+    if (attempts > 30) {
+      clearInterval(iv);
+      document.getElementById('updateProgressMsg').textContent = t('updateFailed');
+      document.getElementById('updateProgressDetail').textContent = 'Service did not restart within 60s';
+    }
+  }, 2000);
+}
+
+// ── Password Change ────────────────────────────────────────────
+function openPasswordModal() {
+  document.getElementById('passwordModal').style.display = 'flex';
+  document.getElementById('pwdModalTitle').textContent = t('changePwd');
+  document.getElementById('pwdOldLabel').textContent = t('oldPwd');
+  document.getElementById('pwdNewLabel').textContent = t('newPwd');
+  document.getElementById('pwdConfirmLabel').textContent = t('confirmPwd');
+  document.getElementById('btnChangePwd').textContent = t('pwdSubmit');
+  document.getElementById('pwdOldInput').value = '';
+  document.getElementById('pwdNewInput').value = '';
+  document.getElementById('pwdConfirmInput').value = '';
+  document.getElementById('pwdError').style.display = 'none';
+}
+
+function closePasswordModal() {
+  document.getElementById('passwordModal').style.display = 'none';
+}
+
+async function doChangePassword() {
+  const oldPwd = document.getElementById('pwdOldInput').value;
+  const newPwd = document.getElementById('pwdNewInput').value;
+  const confirmPwd = document.getElementById('pwdConfirmInput').value;
+  const errEl = document.getElementById('pwdError');
+
+  if (newPwd !== confirmPwd) {
+    errEl.textContent = t('pwdMismatch');
+    errEl.style.display = '';
+    return;
+  }
+  if (newPwd.length < 6) {
+    errEl.textContent = t('pwdTooShort');
+    errEl.style.display = '';
+    return;
+  }
+  errEl.style.display = 'none';
+
+  try {
+    const resp = await fetch('/admin/password', {
+      method: 'PUT',
+      headers: { Authorization: 'Bearer ' + TOKEN, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ oldPassword: oldPwd, newPassword: newPwd })
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      errEl.textContent = resp.status === 403 ? t('pwdOldWrong') : (data.error || t('updateFailed'));
+      errEl.style.display = '';
+      return;
+    }
+    toast(t('pwdSuccess'), 'green');
+    closePasswordModal();
+    TOKEN = '';
+    localStorage.removeItem('tg_token');
+    document.getElementById('mainApp').style.display = 'none';
+    document.getElementById('loginPage').style.display = 'flex';
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = '';
+  }
+}
+</script>
+</body>
+</html>
