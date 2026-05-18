@@ -553,6 +553,10 @@ The model detection feature provided by this project is for reference only and d
 
 **Detection results cannot guarantee 100% accuracy.** Do not use them as the sole basis for judgment. We recommend combining multiple detection results with actual usage experience to comprehensively evaluate upstream service quality.
 
+## Acknowledgments
+
+This project was first published on the [LINUX.DO](https://linux.do) community. Thanks to the community members for their feedback and support.
+
 ## License
 
 Apache License 2.0

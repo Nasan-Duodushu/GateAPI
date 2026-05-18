@@ -703,6 +703,10 @@ docker compose up -d --build
 
 **检测结果无法保证 100% 准确**，请勿将其作为唯一判断依据。建议结合多次检测结果和实际使用体验综合评估上游服务质量。
 
+## 致谢
+
+本项目首发于 [LINUX.DO](https://linux.do) 社区，感谢社区成员的反馈和支持。
+
 ## License
 
 Apache License 2.0
