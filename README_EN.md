@@ -555,7 +555,9 @@ The model detection feature provided by this project is for reference only and d
 
 ## Acknowledgments
 
-This project was first published on the [LINUX.DO](https://linux.do) community. Thanks to the community members for their feedback and support.
+This project actively participates in and acknowledges the [LINUX.DO](https://linux.do) community. Thanks to the community members for their feedback and support.
+
+[![LINUX.DO Acknowledged](https://img.shields.io/badge/LINUX.DO-Acknowledged-blue?style=flat-square&logo=discourse)](https://linux.do)
 
 ## License
 

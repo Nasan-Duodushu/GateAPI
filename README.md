@@ -705,7 +705,9 @@ docker compose up -d --build
 
 ## 致谢
 
-本项目首发于 [LINUX.DO](https://linux.do) 社区，感谢社区成员的反馈和支持。
+本项目积极参与并认可 [LINUX.DO](https://linux.do) 社区，感谢社区成员的反馈和支持。
+
+[![LINUX.DO 认可](https://img.shields.io/badge/LINUX.DO-认可-blue?style=flat-square&logo=discourse)](https://linux.do)
 
 ## License
 
