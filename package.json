@@ -1,17 +1,19 @@
 {
   "name": "gateapi",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "LLM API aggregation gateway with model functional detection engine.",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "node --watch src/index.js"
+    "dev": "node --watch src/index.js",
+    "test": "node --test test/*.test.js"
   },
   "keywords": ["llm", "api", "gateway", "proxy", "model-detection", "openai", "anthropic"],
   "license": "Apache-2.0",
   "dependencies": {
     "better-sqlite3": "^11.0.0",
     "cors": "^2.8.5",
-    "express": "^4.21.0"
+    "express": "^4.21.0",
+    "node-cron": "^3.0.3"
   }
 }

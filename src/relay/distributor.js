@@ -16,6 +16,27 @@ function getLatency(channelId) {
   return _latency.get(channelId)?.avg || 0;
 }
 
+// ── Error rate tracking (sliding window, last 50 calls) ──
+const _errorRate = new Map(); // channelId -> { samples: boolean[], successCount: number }
+const ERROR_WINDOW = 50;
+
+function recordResult(channelId, success) {
+  if (!_errorRate.has(channelId)) _errorRate.set(channelId, { samples: [], successCount: 0 });
+  const entry = _errorRate.get(channelId);
+  entry.samples.push(success);
+  if (success) entry.successCount++;
+  if (entry.samples.length > ERROR_WINDOW) {
+    const removed = entry.samples.shift();
+    if (removed) entry.successCount--;
+  }
+}
+
+function getErrorRate(channelId) {
+  const entry = _errorRate.get(channelId);
+  if (!entry || !entry.samples.length) return 0;
+  return 1 - (entry.successCount / entry.samples.length);
+}
+
 // ── 429 Rate limit tracking ──
 const _rateLimits = new Map(); // channelId -> { count: number, cooldownUntil: number }
 const RL_COOLDOWN_BASE = 30000; // 30s base cooldown
@@ -72,13 +93,18 @@ function setStickyChannel(userId, model, channelId) {
   }
 }
 
-// ── Dynamic weight: base weight adjusted by latency & 429 ──
+// ── Dynamic weight: base weight adjusted by latency, 429 & error rate ──
 function _effectiveWeight(ch) {
   let w = ch.weight || 1;
   // Latency penalty: if avg > 3000ms, halve weight; > 8000ms, quarter it
   const avg = getLatency(ch.id);
   if (avg > 8000) w *= 0.25;
   else if (avg > 3000) w *= 0.5;
+  // Error rate penalty
+  const errRate = getErrorRate(ch.id);
+  if (errRate > 0.5) w *= 0.1;
+  else if (errRate > 0.3) w *= 0.3;
+  else if (errRate > 0.1) w *= 0.7;
   // 429 penalty: in cooldown → weight = 0 (skip)
   if (isRateLimited(ch.id)) return 0;
   return Math.max(0.1, w);
@@ -196,7 +222,11 @@ function getRoutingStats() {
   for (const [id, rl] of _rateLimits) {
     if (rl.cooldownUntil > Date.now()) rateLimits[id] = { count: rl.count, cooldownRemaining: Math.round((rl.cooldownUntil - Date.now()) / 1000) };
   }
-  return { latencies, rateLimits, stickySessions: _sticky.size };
+  const errorRates = {};
+  for (const [id, entry] of _errorRate) {
+    if (entry.samples.length) errorRates[id] = { rate: Math.round(getErrorRate(id) * 1000) / 1000, samples: entry.samples.length };
+  }
+  return { latencies, rateLimits, errorRates, stickySessions: _sticky.size };
 }
 
-module.exports = { selectChannel, selectChannelWithRetry, nextKey, resolveModel, recordLatency, getLatency, record429, clear429, isRateLimited, getRoutingStats };
+module.exports = { selectChannel, selectChannelWithRetry, nextKey, resolveModel, recordLatency, getLatency, record429, clear429, isRateLimited, recordResult, getErrorRate, getRoutingStats };

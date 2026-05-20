@@ -1,6 +1,7 @@
 const express = require('express');
 const config = require('./config');
 const store = require('./store');
+const cache = require('./cache');
 const { selectChannel, selectChannelWithRetry } = require('./relay/distributor');
 const { forward } = require('./relay/forwarder');
 
@@ -77,37 +78,66 @@ router.post('/v1/chat/completions', apiAuth, express.json({ limit: '10mb' }), as
   const model = req.body?.model;
   if (!model) return res.status(400).json({ error: { message: 'Missing "model" in request body', type: 'invalid_request_error' } });
 
+  // Cache lookup (non-streaming only)
+  const isStream = req.body.stream;
+  if (!isStream && cache.isEnabled()) {
+    const cached = cache.get(model, req.body.messages, req.body);
+    if (cached) {
+      res.setHeader('X-Cache', 'HIT');
+      return res.json(cached);
+    }
+  }
+
+  // Hook to capture response for caching
+  if (!isStream && cache.isEnabled()) {
+    const origJson = res.json.bind(res);
+    res.json = (data) => {
+      if (res.statusCode === 200 && data && !data.error) {
+        cache.set(model, req.body.messages, req.body, data);
+      }
+      res.setHeader('X-Cache', 'MISS');
+      return origJson(data);
+    };
+  }
+
   const cfg = config.get();
   const maxRetries = cfg.relay.retryTimes || 0;
   const retryOn = new Set(cfg.relay.retryOnStatusCodes || []);
-  const excludeIds = [];
 
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    const channel = attempt === 0
-      ? selectChannel(model)
-      : selectChannelWithRetry(model, excludeIds);
+  // Build model chain: [primary, ...fallbacks]
+  const fallbacks = cfg.modelFallback || {};
+  const modelChain = [model, ...(fallbacks[model] || [])];
 
-    if (!channel) {
-      return res.status(404).json({ error: { message: `No available channel for model "${model}"`, type: 'model_not_found' } });
+  for (const currentModel of modelChain) {
+    const excludeIds = [];
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      const channel = attempt === 0
+        ? selectChannel(currentModel)
+        : selectChannelWithRetry(currentModel, excludeIds);
+
+      if (!channel) break; // no channel for this model, try next in chain
+
+      // Override request model for fallback
+      const origModel = req.body.model;
+      req.body.model = currentModel;
+      const result = await forward(req, res, channel, currentModel);
+      req.body.model = origModel;
+
+      if (res.headersSent || res.writableEnded) return;
+      if (result.ok || !retryOn.has(result.status)) return;
+
+      excludeIds.push(channel.id);
+      console.log(`[relay] Retry ${attempt + 1}/${maxRetries} for model=${currentModel}, excluding channel ${channel.id}`);
     }
-
-    const result = await forward(req, res, channel, model);
-
-    // If response already sent (stream or success), done
-    if (res.headersSent || res.writableEnded) return;
-
-    // If not retryable, stop
-    if (result.ok || !retryOn.has(result.status)) return;
-
-    // Exclude failed channel and retry
-    excludeIds.push(channel.id);
-    console.log(`[relay] Retry ${attempt + 1}/${maxRetries} for model=${model}, excluding channel ${channel.id}`);
+    if (currentModel !== model) {
+      console.log(`[relay] Fallback model=${currentModel} exhausted, trying next`);
+    }
   }
 
-  // All retries exhausted, send error if response not yet sent
+  // All models in chain exhausted
   if (!res.headersSent && !res.writableEnded) {
-    console.log(`[relay] All ${excludeIds.length} channels exhausted for model=${model}, excluded=[${excludeIds.join(',')}]`);
-    res.status(502).json({ error: { message: `All channels failed for model "${model}" after ${excludeIds.length} attempts (channels tried: ${excludeIds.join(', ')})`, type: 'upstream_error' } });
+    const tried = modelChain.length > 1 ? ` (chain: ${modelChain.join(' → ')})` : '';
+    res.status(502).json({ error: { message: `All channels failed for model "${model}"${tried}`, type: 'upstream_error' } });
   }
 });
 
@@ -136,21 +166,32 @@ router.post('/v1/messages', apiAuth, express.json({ limit: '10mb' }), async (req
   const cfg = config.get();
   const maxRetries = cfg.relay.retryTimes || 0;
   const retryOn = new Set(cfg.relay.retryOnStatusCodes || []);
-  const excludeIds = [];
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    const channel = attempt === 0
-      ? selectChannel(model)
-      : selectChannelWithRetry(model, excludeIds);
 
-    if (!channel) {
-      return res.status(404).json({ type: 'error', error: { type: 'not_found', message: `No available channel for model "${model}"` } });
+  const fallbacks = cfg.modelFallback || {};
+  const modelChain = [model, ...(fallbacks[model] || [])];
+
+  for (const currentModel of modelChain) {
+    const excludeIds = [];
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      const channel = attempt === 0
+        ? selectChannel(currentModel)
+        : selectChannelWithRetry(currentModel, excludeIds);
+
+      if (!channel) break;
+
+      const origModel = req.body.model;
+      req.body.model = currentModel;
+      const result = await forward(req, res, channel, currentModel);
+      req.body.model = origModel;
+
+      if (res.headersSent || res.writableEnded) return;
+      if (result.ok || !retryOn.has(result.status)) return;
+      excludeIds.push(channel.id);
     }
+  }
 
-    const result = await forward(req, res, channel, model);
-    if (res.headersSent || res.writableEnded) return;
-    if (result.ok || !retryOn.has(result.status)) return;
-
-    excludeIds.push(channel.id);
+  if (!res.headersSent && !res.writableEnded) {
+    res.status(502).json({ type: 'error', error: { type: 'overloaded', message: `All channels failed for "${model}"` } });
   }
 });
 

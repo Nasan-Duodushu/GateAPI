@@ -3,7 +3,8 @@ const https = require('https');
 const { URL } = require('url');
 const config = require('../config');
 const store = require('../store');
-const { nextKey, resolveModel, recordLatency, record429, clear429 } = require('./distributor');
+const { nextKey, resolveModel, recordLatency, record429, clear429, recordResult } = require('./distributor');
+const { processMessages } = require('../prompt-engine');
 const { maybeSampleDetect } = require('../scheduler');
 
 // ── Health tracking ──
@@ -100,9 +101,12 @@ async function forward(req, res, channel, requestedModel) {
   const isStream = req.body.stream === true;
   const isAnthUpstream = channel.type === 'anthropic';
 
+  // Apply prompt engine (system prompt injection + context compression)
+  const processedBody = processMessages(req.body);
+
   const reqBody = isAnthUpstream
-    ? oaiToAnthropicBody(req.body, actualModel)
-    : { ...req.body, model: actualModel };
+    ? oaiToAnthropicBody(processedBody, actualModel)
+    : { ...processedBody, model: actualModel };
   const body = JSON.stringify(reqBody);
 
   const endpoint = channel.endpoint.replace(/\/+$/, '');
@@ -150,8 +154,8 @@ async function forward(req, res, channel, requestedModel) {
           logData.durationMs = Date.now() - startTime;
           logData.error = errBody.slice(0, 500);
           recordLatency(channel.id, logData.durationMs);
-          if (proxyRes.statusCode === 429) record429(channel.id);
-          else recordFailure(channel);
+          if (proxyRes.statusCode === 429) { record429(channel.id); recordResult(channel.id, false); }
+          else { recordFailure(channel); recordResult(channel.id, false); }
           store.logRequest(logData);
           res.status(proxyRes.statusCode);
           res.set('Content-Type', 'application/json');
@@ -191,6 +195,7 @@ async function forward(req, res, channel, requestedModel) {
             logData.durationMs = Date.now() - startTime;
             recordLatency(channel.id, logData.durationMs);
             recordSuccess(channel.id);
+            recordResult(channel.id, true);
             store.logRequest(logData);
             maybeSampleDetect(channel, requestedModel);
             if (!res.writableEnded) res.end();
@@ -202,6 +207,7 @@ async function forward(req, res, channel, requestedModel) {
             logData.durationMs = Date.now() - startTime;
             recordLatency(channel.id, logData.durationMs);
             recordSuccess(channel.id);
+            recordResult(channel.id, true);
             store.logRequest(logData);
             maybeSampleDetect(channel, requestedModel);
             resolve({ ok: true, status: 200 });
@@ -211,6 +217,7 @@ async function forward(req, res, channel, requestedModel) {
           logData.durationMs = Date.now() - startTime;
           logData.error = e.message;
           recordFailure(channel);
+          recordResult(channel.id, false);
           store.logRequest(logData);
           if (!res.writableEnded) res.end();
           resolve({ ok: false, status: 502 });
@@ -236,6 +243,7 @@ async function forward(req, res, channel, requestedModel) {
                 console.log(`[relay] Empty content from ch${channel.id}(${channel.name}) model=${requestedModel} prompt_tokens=${promptTok} — upstream returned 200 but message.content is null/empty with 0 completion_tokens`);
                 logData.error = `upstream_empty_content: ch${channel.id}(${channel.name}) returned 200 but content=null, completion_tokens=0`;
                 recordFailure(channel);
+                recordResult(channel.id, false);
                 store.logRequest(logData);
                 resolve({ ok: false, status: 502 });
                 return;
@@ -243,6 +251,7 @@ async function forward(req, res, channel, requestedModel) {
             }
 
             recordSuccess(channel.id);
+            recordResult(channel.id, true);
             if (isAnthUpstream) {
               const converted = anthropicToOaiResponse(obj, requestedModel);
               logData.promptTokens = converted.usage.prompt_tokens;
@@ -281,6 +290,7 @@ async function forward(req, res, channel, requestedModel) {
       logData.durationMs = Date.now() - startTime;
       logData.error = e.message;
       recordFailure(channel);
+      recordResult(channel.id, false);
       store.logRequest(logData);
       if (!res.headersSent) {
         res.status(502).json({ error: { message: `Upstream error: ${e.message}`, type: 'upstream_error' } });
@@ -293,6 +303,7 @@ async function forward(req, res, channel, requestedModel) {
       logData.durationMs = Date.now() - startTime;
       logData.error = 'timeout';
       recordFailure(channel);
+      recordResult(channel.id, false);
       store.logRequest(logData);
       if (!res.headersSent) {
         res.status(504).json({ error: { message: 'Upstream timeout', type: 'timeout_error' } });

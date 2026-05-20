@@ -38,6 +38,7 @@ function _validateConfig(c) {
   c.relay.retryOnStatusCodes = c.relay.retryOnStatusCodes || [429, 500, 502, 503];
   if (!c.detect) c.detect = { mode: 'quick', autoOnAdd: true };
   if (!c.modelAliases) c.modelAliases = {};
+  if (!c.promptEngine) c.promptEngine = { enabled: false, systemPrompt: '', injectMode: 'prepend', maxMessages: 0 };
   if (!Array.isArray(c.channels)) c.channels = [];
   let maxId = 0;
   for (const ch of c.channels) {
@@ -49,6 +50,7 @@ function _validateConfig(c) {
     ch.weight = ch.weight ?? 10;
     ch.priority = ch.priority ?? 0;
     ch.status = ch.status || 'enabled';
+    ch.costRate = ch.costRate ?? 1.0;
     ch.modelMapping = ch.modelMapping || {};
     if (!Array.isArray(ch.disabledModels)) ch.disabledModels = [];
     ch._keyIndex = 0;
@@ -111,6 +113,7 @@ function addChannel(ch) {
   ch.weight = ch.weight ?? 10;
   ch.priority = ch.priority ?? 0;
   ch.status = ch.status || 'enabled';
+  ch.costRate = ch.costRate ?? 1.0;
   ch.modelMapping = ch.modelMapping || {};
   if (!Array.isArray(ch.disabledModels)) ch.disabledModels = [];
   ch._keyIndex = 0;

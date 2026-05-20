@@ -4,7 +4,7 @@
 
 # ⬡ GateAPI
 
-[![version](https://img.shields.io/badge/version-0.1.0-blue)](https://github.com/Nasan-Duodushu/GateAPI/releases)
+[![version](https://img.shields.io/badge/version-0.2.0-blue)](https://github.com/Nasan-Duodushu/GateAPI/releases)
 [![platform](https://img.shields.io/badge/platform-Linux%20%7C%20Docker-brightgreen)](https://github.com/Nasan-Duodushu/GateAPI)
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?logo=node.js)](https://nodejs.org/)
 [![license](https://img.shields.io/badge/license-Apache%202.0-orange)](LICENSE)
@@ -40,7 +40,12 @@ Beyond aggregation, GateAPI has a built-in **detection engine**. First, connecti
 - Multiple providers unified into a single `/v1/chat/completions` endpoint — seamless downstream switching
 - OpenAI / Anthropic dual-protocol auto-conversion, no format headaches
 - Priority + dynamic weight smart routing — high latency auto-downweighted, 429s auto-cooled and skipped
+- Error rate tracking with sliding window — high-error channels auto-deprioritized
 - Built-in API key management with quota and rate limiting
+
+**Prompt Engine**
+- System prompt injection — prepend or append a system message to every request
+- Context compression — limit conversation history length, preserving system messages + latest N turns
 
 **Model Detection Engine**
 - Connectivity testing: batch-test all models across all channels — see what's up, what's down, and latency at a glance
@@ -51,6 +56,10 @@ Beyond aggregation, GateAPI has a built-in **detection engine**. First, connecti
 **Admin Panel**
 - Built-in web admin panel — manage channels, view logs, run detection, all from the browser
 - Dashboard with real-time request stats, success rate, latency, and detection status
+- Webhook notifications (Telegram / Discord / HTTP) for detection alerts
+- Request caching with configurable TTL and max entries
+- Account hub for managing upstream platform accounts (login, check-in, balance query)
+- Provider presets for quick channel setup (OpenAI, Anthropic, DeepSeek, Moonshot, etc.)
 - Chinese / English bilingual support + dark mode
 - One-click update check + online upgrade
 
@@ -84,23 +93,24 @@ Beyond aggregation, GateAPI has a built-in **detection engine**. First, connecti
 │  │ /v1/msg  │    │ Dynamic Wt   │    │ Protocol OAI↔Anth    │  │
 │  │ /v1/mdls │    │ Sticky Sess  │    │ SSE Passthrough       │  │
 │  │          │    │ 429 Adaptive │    │ Empty Detection+Retry │  │
+│  │          │    │ Error Rate   │    │ Prompt Engine         │  │
 │  └──────────┘    └──────────────┘    └───────┬───────────────┘  │
 │                                              │                  │
-│  ┌──────────┐    ┌──────────────┐            │                  │
-│  │  Admin   │    │  Detective    │            │                  │
-│  │  API     │    │  Engine       │            │                  │
-│  │          │    │              │            │                  │
-│  │ Ch. CRUD │    │ 13 Probes    │            │                  │
-│  │ Key Mgmt │    │ 50+ FP DB   │            │                  │
-│  │ Logs     │    │ Scoring      │            │                  │
-│  └──────────┘    └──────────────┘            │                  │
-│                                              │                  │
-│  ┌──────────┐    ┌──────────────┐            │                  │
-│  │  Store   │    │  Scheduler   │            │                  │
-│  │ SQLite   │    │ Cron Detect  │            │                  │
-│  │ Req Logs │    │ Sampling     │            │                  │
-│  │ Results  │    │ Auto Degrade │            │                  │
-│  └──────────┘    └──────────────┘            │                  │
+│  ┌──────────┐    ┌──────────────┐    ┌──────┴────────────────┐  │
+│  │  Admin   │    │  Detective    │    │  Prompt Engine        │  │
+│  │  API     │    │  Engine       │    │  System Prompt Inject │  │
+│  │          │    │              │    │  Context Compression  │  │
+│  │ Ch. CRUD │    │ 13 Probes    │    └───────────────────────┘  │
+│  │ Key Mgmt │    │ 50+ FP DB   │                               │
+│  │ Logs     │    │ Scoring      │                               │
+│  └──────────┘    └──────────────┘                               │
+│                                                                 │
+│  ┌──────────┐    ┌──────────────┐    ┌───────────────────────┐  │
+│  │  Store   │    │  Scheduler   │    │  Webhook + Cache      │  │
+│  │ SQLite   │    │ Cron Detect  │    │  TG/Discord/HTTP      │  │
+│  │ Req Logs │    │ Sampling     │    │  Response Cache       │  │
+│  │ Results  │    │ Auto Degrade │    │  Account Hub          │  │
+│  └──────────┘    └──────────────┘    └───────────────────────┘  │
 └──────────────────────────────────────────────┼──────────────────┘
                                                │
                     ┌──────────────────────────────────────┐
@@ -124,11 +134,16 @@ Beyond aggregation, GateAPI has a built-in **detection engine**. First, connecti
 
 ### Smart Routing Engine
 - **Latency-Aware Routing** — Track rolling average latency per channel, prefer faster channels
+- **Error Rate Tracking** — Sliding window (last 50 calls) per channel; >50% error → weight ×0.1, >30% → ×0.3, >10% → ×0.7
 - **429 Rate-Limit Adaptive** — Exponential backoff cooldown (30s→5min), auto-redirect during cooldown
 - **Sticky Sessions** — Same user + same model reuses the same channel for 10 minutes
-- **Priority + Dynamic Weights** — Base weight adjusted by latency and rate-limit status in real-time
+- **Priority + Dynamic Weights** — Base weight adjusted by latency, error rate, and rate-limit status in real-time
 - **Auto Failover** — 5 consecutive failures → auto-degrade for 5 minutes, then auto-recover
 - **Multi-Channel Retry** — On failure, automatically switch to another channel serving the same model
+
+### Prompt Engine
+- **System Prompt Injection** — Automatically prepend or append a system-level message to every request
+- **Context Compression** — Limit total messages per request; preserves all system messages + most recent N user/assistant turns
 
 ### Model Management
 - **Global Model Aliases** — Unify different provider model names to canonical names
@@ -243,11 +258,16 @@ gateapi/
 │   ├── store.js              # SQLite storage (request logs + detection results + API keys)
 │   ├── router.js             # External API routes (dual protocol + retry loop)
 │   ├── scheduler.js          # Cron detection + passive sampling + auto-degrade
+│   ├── prompt-engine.js      # Prompt engine (system prompt injection + context compression)
+│   ├── cache.js              # Response cache with TTL
+│   ├── webhook.js            # Webhook notifications (Telegram / Discord / HTTP)
+│   ├── accounts.js           # Account hub (login, check-in, balance query)
+│   ├── balance.js            # Channel balance query
 │   ├── relay/
-│   │   ├── distributor.js    # Routing engine (priority + dynamic weight + sticky + 429 adaptive)
-│   │   └── forwarder.js      # Request forwarding (protocol convert + SSE + empty detect + health)
+│   │   ├── distributor.js    # Routing engine (priority + dynamic weight + sticky + 429 + error rate)
+│   │   └── forwarder.js      # Request forwarding (protocol convert + SSE + empty detect + prompt engine)
 │   ├── admin/
-│   │   └── api.js            # Admin API (channel CRUD / stats / detection / key management)
+│   │   └── api.js            # Admin API (channel CRUD / stats / detection / key management / prompt engine)
 │   └── detective/
 │       ├── engine.js         # Detection engine (13 probes + 3-batch parallel + weighted scoring)
 │       ├── fingerprints.js   # Model fingerprint database (50+ models)
@@ -354,6 +374,10 @@ If a model claims to be Claude (CN=16) but prompt_tokens shows CN≈9, it's like
               │ × latency factor     │
               │  >3s → ×0.5         │
               │  >8s → ×0.25        │
+              │ × error rate factor  │
+              │  >50% → ×0.1        │
+              │  >30% → ×0.3        │
+              │  >10% → ×0.7        │
               │ × 429 status         │
               │  cooling → ×0       │
               └────────┬────────────┘
@@ -393,6 +417,16 @@ All admin APIs require `Authorization: Bearer <adminToken>` header.
 | GET | `/admin/model-aliases` | View global model aliases |
 | PUT | `/admin/model-aliases` | Update global model aliases |
 | GET | `/admin/routing-stats` | Routing engine real-time status |
+| GET | `/admin/prompt-engine` | Get prompt engine config |
+| PUT | `/admin/prompt-engine` | Update prompt engine config |
+| GET | `/admin/webhook` | Get webhook config |
+| PUT | `/admin/webhook` | Update webhook config |
+| POST | `/admin/webhook/test` | Send test notification |
+| GET | `/admin/cache` | Cache stats |
+| PUT | `/admin/cache` | Update cache config |
+| DELETE | `/admin/cache` | Clear cache |
+| GET | `/admin/accounts` | List accounts |
+| POST | `/admin/accounts` | Add account |
 | POST | `/admin/config/reload` | Hot reload config |
 
 ## Channel Configuration
@@ -540,7 +574,7 @@ docker compose up -d --build
 - **Framework**: Express
 - **Database**: SQLite (better-sqlite3)
 - **Frontend**: Vanilla HTML + TailwindCSS CDN (single-file SPA)
-- **Production Dependencies**: Only 3 (express, better-sqlite3, cors)
+- **Production Dependencies**: Only 4 (express, better-sqlite3, cors, node-cron)
 
 ## Disclaimer
 

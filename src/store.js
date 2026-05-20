@@ -273,11 +273,75 @@ function getUsageStats(userId, hours = 24) {
   `).all(since, userId);
 }
 
+// ── Enhanced statistics for dashboard charts ──
+
+function getHourlyStats(hours = 24) {
+  const since = Date.now() - hours * 3600000;
+  return db.prepare(`
+    SELECT
+      CAST((ts / 3600000) AS INTEGER) * 3600000 as hour_ts,
+      COUNT(*) as total,
+      SUM(CASE WHEN error IS NULL THEN 1 ELSE 0 END) as success,
+      SUM(CASE WHEN error IS NOT NULL THEN 1 ELSE 0 END) as failed,
+      AVG(duration_ms) as avg_duration,
+      SUM(prompt_tokens + completion_tokens) as total_tokens
+    FROM request_logs WHERE ts > ?
+    GROUP BY hour_ts ORDER BY hour_ts
+  `).all(since);
+}
+
+function getUsageByModel(hours = 168) {
+  const since = Date.now() - hours * 3600000;
+  return db.prepare(`
+    SELECT model,
+      COUNT(*) as count,
+      SUM(CASE WHEN error IS NULL THEN 1 ELSE 0 END) as success,
+      AVG(duration_ms) as avg_duration,
+      SUM(prompt_tokens) as prompt_tokens,
+      SUM(completion_tokens) as completion_tokens,
+      SUM(prompt_tokens + completion_tokens) as total_tokens
+    FROM request_logs WHERE ts > ?
+    GROUP BY model ORDER BY total_tokens DESC
+  `).all(since);
+}
+
+function getUsageByChannel(hours = 168) {
+  const since = Date.now() - hours * 3600000;
+  return db.prepare(`
+    SELECT channel_id, channel_name,
+      COUNT(*) as count,
+      SUM(CASE WHEN error IS NULL THEN 1 ELSE 0 END) as success,
+      AVG(duration_ms) as avg_duration,
+      SUM(prompt_tokens) as prompt_tokens,
+      SUM(completion_tokens) as completion_tokens,
+      SUM(prompt_tokens + completion_tokens) as total_tokens
+    FROM request_logs WHERE ts > ?
+    GROUP BY channel_id ORDER BY total_tokens DESC
+  `).all(since);
+}
+
+function getDailyUsage(days = 30) {
+  const since = Date.now() - days * 86400000;
+  return db.prepare(`
+    SELECT
+      CAST((ts / 86400000) AS INTEGER) * 86400000 as day_ts,
+      COUNT(*) as total,
+      SUM(CASE WHEN error IS NULL THEN 1 ELSE 0 END) as success,
+      SUM(prompt_tokens) as prompt_tokens,
+      SUM(completion_tokens) as completion_tokens,
+      SUM(prompt_tokens + completion_tokens) as total_tokens,
+      AVG(duration_ms) as avg_duration
+    FROM request_logs WHERE ts > ?
+    GROUP BY day_ts ORDER BY day_ts
+  `).all(since);
+}
+
 function getDB() { return db; }
 
 module.exports = {
   init, logRequest, getStats, getRecentLogs, saveDetectResult, getDetectResults, getDB,
   createUser, verifyUser, getUser, getUserByName, listUsers, updateUser, deleteUser, resetPassword,
   createApiKey, getApiKeyByKey, getApiKey, listAllApiKeys, updateApiKey, deleteApiKey,
-  consumeQuota, checkQuota, hashPassword
+  consumeQuota, checkQuota, hashPassword,
+  getHourlyStats, getUsageByModel, getUsageByChannel, getDailyUsage
 };

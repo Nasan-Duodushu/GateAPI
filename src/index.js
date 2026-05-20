@@ -6,6 +6,9 @@ const store = require('./store');
 const apiRouter = require('./router');
 const adminRouter = require('./admin/api');
 const { startCron } = require('./scheduler');
+const webhook = require('./webhook');
+const cache = require('./cache');
+const accounts = require('./accounts');
 
 // Load config
 config.load();
@@ -13,12 +16,28 @@ config.load();
 // Init SQLite
 store.init();
 
+// Init accounts
+accounts.load();
+accounts.startKeepAlive();
+
+// Init cache
+const cacheCfg = config.get().cache || {};
+cache.configure(cacheCfg);
+
+// Init webhook hooks
+webhook.init();
+
 const app = express();
 app.use(cors());
 
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', version: require('../package.json').version, uptime: process.uptime() });
+});
+
+// OpenAPI spec
+app.get('/openapi.json', (req, res) => {
+  res.json(require('./openapi.json'));
 });
 
 // Serve web UI

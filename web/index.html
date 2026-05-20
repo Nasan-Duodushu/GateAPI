@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,510;14..32,600;14..32,700&family=Press+Start+2P&family=DotGothic16&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script>tailwindcss.config={darkMode:'class',theme:{extend:{colors:{bg0:'#0a0a0f',bg1:'#111118',bg2:'#1a1a2e',bg3:'#252540',accent:'#6366f1',accent2:'#818cf8',green:'#22c55e',red:'#ef4444',amber:'#f59e0b'}}}}</script>
 <style>
   :root{
@@ -46,6 +47,7 @@
   .badge-amber{background:rgba(245,158,11,.1);color:#d97706;}
   .badge-blue{background:rgba(59,130,246,.1);color:#2563eb;}
   .badge-purple{background:rgba(139,92,246,.1);color:#7c3aed;}
+  .badge-gray{background:rgba(100,116,139,.1);color:#64748b;}
   table{width:100%;border-collapse:collapse;}
   th{text-align:left;padding:10px 14px;color:var(--text3);font-size:11px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);font-weight:600;}
   td{padding:12px 14px;border-bottom:1px solid var(--border2);font-size:13px;transition:background .2s;}
@@ -73,7 +75,33 @@
   .progress-fill{height:100%;border-radius:3px;transition:width .3s;}
   .toast{position:fixed;top:20px;right:20px;padding:14px 22px;border-radius:12px;color:#fff;font-size:13px;font-weight:500;z-index:100;animation:slideIn .3s;box-shadow:0 8px 24px rgba(0,0,0,.4);}
   @keyframes slideIn{from{transform:translateX(100px);opacity:0}to{transform:translateX(0);opacity:1}}
-  @media(max-width:768px){.sidebar{transform:translateX(-100%);transition:transform .2s;}.sidebar.open{transform:translateX(0);}.main-content{margin-left:0;}.mobile-header{display:flex !important;}}
+  @media(max-width:768px){
+    .sidebar{transform:translateX(-100%);transition:transform .2s;width:260px;}.sidebar.open{transform:translateX(0);}.main-content{margin-left:0;}.mobile-header{display:flex !important;}
+    .p-6{padding:12px !important;}
+    .grid-cols-2{grid-template-columns:1fr !important;}
+    .grid-cols-3{grid-template-columns:1fr 1fr !important;}
+    .lg\:grid-cols-4{grid-template-columns:1fr 1fr !important;}
+    #tab-settings > div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr !important;}
+    .stat-num{font-size:22px;}
+    .stat-card{padding:14px;}
+    .ch-header{flex-wrap:wrap;padding:12px 14px;gap:8px;}
+    .ch-meta{flex-wrap:wrap;gap:6px;}
+    .ch-meta-info{gap:4px;}
+    .ch-meta-endpoint{max-width:160px;font-size:10px;}
+    .ch-actions{width:100%;justify-content:flex-end;}
+    .ch-model-row{flex-wrap:wrap;padding:8px 14px;gap:6px;}
+    .ch-model-name{width:100%;}
+    .ch-stats{flex-wrap:wrap;gap:10px;padding:10px 14px;}
+    .ch-test-all{flex-wrap:wrap;gap:8px;padding:10px 14px;}
+    .modal{padding:18px;max-width:96vw;border-radius:12px;}
+    .detail-grid{grid-template-columns:1fr !important;}
+    .toast{top:auto;bottom:16px;right:12px;left:12px;text-align:center;}
+    .flex.justify-between{flex-wrap:wrap;gap:8px;}
+    h1.text-xl{font-size:16px !important;}
+    .card{padding:14px;border-radius:10px;}
+    table{font-size:12px;}
+    th,td{padding:8px 10px;}
+  }
   .mobile-header{display:none;align-items:center;gap:12px;padding:12px 16px;background:var(--bg-sidebar);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:9;}
   .mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9;}
   .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
@@ -417,7 +445,7 @@
   <nav class="sidebar">
     <div class="px-5 mb-6">
       <div class="text-lg font-bold" style="color:#a5b4fc;">⬡ GateAPI</div>
-      <div class="text-xs mt-1 cursor-pointer hover:text-indigo-400 transition-colors" style="color:var(--text2);" id="sidebarVersion" onclick="openUpdateModal()" title="检查更新">v0.1.0 ⟳</div>
+      <div class="text-xs mt-1 cursor-pointer hover:text-indigo-400 transition-colors" style="color:var(--text2);" id="sidebarVersion" onclick="openUpdateModal()">v0.1.0 ⟳</div>
     </div>
     <div class="sidebar-item active" data-tab="dashboard" onclick="switchTab('dashboard')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -443,7 +471,15 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
       日志
     </div>
-    <div class="sidebar-item" data-tab="settings" onclick="openPasswordModal()">
+    <div class="sidebar-item" data-tab="usage" onclick="switchTab('usage')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+      用量统计
+    </div>
+    <div class="sidebar-item" data-tab="accounts" onclick="switchTab('accounts')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      账户
+    </div>
+    <div class="sidebar-item" data-tab="settings" onclick="switchTab('settings')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
       系统设置
     </div>
@@ -533,28 +569,33 @@
     <!-- Dashboard Tab -->
     <div id="tab-dashboard" class="p-6">
       <div class="flex justify-between items-center mb-6">
-        <h1 class="text-xl font-bold">仪表盘</h1>
+        <h1 class="text-xl font-bold" id="dashTitle">仪表盘</h1>
         <div class="text-xs text-gray-500" id="dashUpdateTime"></div>
       </div>
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div class="stat-card">
-          <div class="stat-label">请求总数 (24h)</div>
+          <div class="stat-label" id="lblStatTotal">请求总数 (24h)</div>
           <div class="stat-num" id="statTotal">-</div>
           <div class="stat-sub" id="statTokens"></div>
         </div>
         <div class="stat-card glow-green">
-          <div class="stat-label">成功</div>
+          <div class="stat-label" id="lblStatSuccess">成功</div>
           <div class="stat-num" style="color:#22c55e;" id="statSuccess">-</div>
           <div class="stat-sub" id="statSuccessRate"></div>
         </div>
         <div class="stat-card glow-red">
-          <div class="stat-label">失败</div>
+          <div class="stat-label" id="lblStatFailed">失败</div>
           <div class="stat-num" style="color:#ef4444;" id="statFailed">-</div>
         </div>
         <div class="stat-card glow-amber">
-          <div class="stat-label">平均延迟</div>
+          <div class="stat-label" id="lblStatAvgMs">平均延迟</div>
           <div class="stat-num" style="color:#f59e0b;" id="statAvgMs">-</div>
         </div>
+      </div>
+      <!-- Dashboard Charts -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        <div class="card"><h3 class="text-sm font-semibold mb-3" style="color:var(--text3);" id="chartReqTitle">请求趋势 (24h)</h3><div style="height:220px;"><canvas id="chartHourlyReq"></canvas></div></div>
+        <div class="card"><h3 class="text-sm font-semibold mb-3" style="color:var(--text3);" id="chartLatTitle">延迟 & 成功率 (24h)</h3><div style="height:220px;"><canvas id="chartHourlyLat"></canvas></div></div>
       </div>
       <!-- Detection Health Overview -->
       <div class="card mb-4" id="detectOverview" style="display:none;">
@@ -577,12 +618,12 @@
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div class="card">
-          <h3 class="text-sm font-semibold" style="color:var(--text3);" class="mb-3">按模型统计 (24h)</h3>
-          <table><thead><tr><th>模型</th><th>请求</th><th>成功率</th><th>平均延迟</th></tr></thead><tbody id="statByModel"></tbody></table>
+          <h3 class="text-sm font-semibold mb-3" style="color:var(--text3);" id="dashByModelTitle">按模型统计 (24h)</h3>
+          <table><thead><tr><th id="thModel1">模型</th><th id="thReq1">请求</th><th id="thSuccRate1">成功率</th><th id="thAvgLat1">平均延迟</th></tr></thead><tbody id="statByModel"></tbody></table>
         </div>
         <div class="card">
-          <h3 class="text-sm font-semibold" style="color:var(--text3);" class="mb-3">按渠道统计 (24h)</h3>
-          <table><thead><tr><th>渠道</th><th>请求</th><th>成功率</th><th>平均延迟</th></tr></thead><tbody id="statByChannel"></tbody></table>
+          <h3 class="text-sm font-semibold mb-3" style="color:var(--text3);" id="dashByChTitle">按渠道统计 (24h)</h3>
+          <table><thead><tr><th id="thCh1">渠道</th><th id="thReq2">请求</th><th id="thSuccRate2">成功率</th><th id="thAvgLat2">平均延迟</th></tr></thead><tbody id="statByChannel"></tbody></table>
         </div>
       </div>
     </div>
@@ -603,7 +644,20 @@
     <div id="tab-models" class="p-6" style="display:none;">
       <div class="flex justify-between items-center mb-5">
         <h1 class="text-xl font-bold" id="modelTabTitle">Aggregated Models</h1>
-        <button class="btn btn-outline btn-sm" id="btnAliasToggle" onclick="toggleAliasPanel()">🔗 <span id="aliasBtn">Alias</span></button>
+        <div class="flex gap-2">
+          <button class="btn btn-outline btn-sm" id="btnFallbackToggle" onclick="toggleFallbackPanel()">🔄 Fallback</button>
+          <button class="btn btn-outline btn-sm" id="btnAliasToggle" onclick="toggleAliasPanel()">🔗 <span id="aliasBtn">Alias</span></button>
+        </div>
+      </div>
+      <!-- Fallback panel -->
+      <div id="fallbackPanel" class="card mb-4" style="display:none;">
+        <h3 class="text-sm font-semibold mb-2" style="color:var(--text3);">🔄 <span id="fallbackPanelTitle">Model Fallback Chain</span></h3>
+        <p class="text-xs mb-3" style="color:var(--text3);" id="fallbackDesc">When a model is unavailable on all channels, automatically try fallback models in order.</p>
+        <div id="fallbackRows"></div>
+        <div class="flex gap-2 mt-3">
+          <button class="btn btn-outline btn-sm" onclick="addFallbackRow()">+ Add</button>
+          <button class="btn btn-primary btn-sm" onclick="saveFallbacks()">Save</button>
+        </div>
       </div>
       <!-- Alias panel -->
       <div id="aliasPanel" class="card mb-4">
@@ -642,14 +696,24 @@
       <!-- Settings panel -->
       <div id="detectSettingsPanel" class="card mb-4" style="display:none;">
         <h3 class="text-sm font-semibold mb-3" style="color:var(--text3);">⚙️ <span id="detectSettingsTitle">Detection Settings</span></h3>
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
           <div>
             <label class="text-xs" style="color:var(--text3);" id="lbl_sampleRate">Sample Rate</label>
             <input id="cfg_sampleRate" type="number" step="0.01" min="0" max="1" placeholder="0 = 关闭" style="font-size:13px;">
           </div>
           <div>
-            <label class="text-xs" style="color:var(--text3);" id="lbl_cronInterval">Cron Interval (h)</label>
+            <label class="text-xs" style="color:var(--text3);" id="lbl_cronExpr">Cron Expression</label>
+            <input id="cfg_cronExpression" type="text" placeholder="0 */6 * * *" style="font-size:13px;font-family:monospace;">
+          </div>
+          <div>
+            <label class="text-xs" style="color:var(--text3);" id="lbl_cronInterval">Interval (h) <span style="opacity:.5">fallback</span></label>
             <input id="cfg_cronInterval" type="number" min="0" placeholder="0 = 关闭" style="font-size:13px;">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div>
+            <label class="text-xs" style="color:var(--text3);" id="lbl_cronTz">Timezone</label>
+            <input id="cfg_cronTimezone" type="text" placeholder="Asia/Shanghai" style="font-size:13px;">
           </div>
           <div>
             <label class="text-xs" style="color:var(--text3);" id="lbl_degradeThreshold">Degrade Threshold</label>
@@ -662,8 +726,15 @@
               <option value="disable" id="opt_degradeDisable">Disable Channel</option>
             </select>
           </div>
+          <div>
+            <label class="text-xs" style="color:var(--text3);" id="lbl_cronStatus">Status</label>
+            <div id="cronStatusBadge" class="text-xs mt-1" style="color:var(--text3);">—</div>
+          </div>
         </div>
-        <button class="btn btn-primary btn-sm mt-3" id="btnSaveDetectCfg" onclick="saveDetectConfig()">Save</button>
+        <div class="flex items-center gap-3 mt-3">
+          <button class="btn btn-primary btn-sm" id="btnSaveDetectCfg" onclick="saveDetectConfig()">Save</button>
+          <span class="text-xs" style="color:var(--text3);" id="cronExprHint">常用: 0 */6 * * * (每6h) | 0 0 * * * (每天0点) | 0 9,21 * * * (9点和21点)</span>
+        </div>
       </div>
       <div class="detect-progress" id="detectProgress"><div class="detect-progress-bar" id="detectProgressBar"></div></div>
       <div id="detectContent" class="mt-4 space-y-4"></div>
@@ -686,11 +757,221 @@
       </div>
       <div class="card" style="padding:0;overflow:hidden;"><div class="table-wrap">
         <table>
-          <thead><tr><th>时间</th><th>模型</th><th>渠道</th><th>状态码</th><th>延迟</th><th>Tokens</th><th>错误</th></tr></thead>
+          <thead><tr><th id="thLogTime">时间</th><th id="thLogModel">模型</th><th id="thLogCh">渠道</th><th id="thLogStatus">状态码</th><th id="thLogLat">延迟</th><th>Tokens</th><th id="thLogErr">错误</th></tr></thead>
           <tbody id="logList"></tbody>
         </table>
       </div></div>
     </div>
+
+    <!-- Usage Tab -->
+    <div id="tab-usage" class="p-6" style="display:none;">
+      <div class="flex justify-between items-center mb-5">
+        <h1 class="text-xl font-bold" id="usageTitle">用量统计</h1>
+        <div class="flex gap-2">
+          <select id="usageRange" onchange="loadUsage()" class="text-xs" style="width:auto;padding:6px 10px;">
+            <option value="24" id="optRange24">24h</option>
+            <option value="72" id="optRange72">3 天</option>
+            <option value="168" id="optRange168" selected>7 天</option>
+            <option value="720" id="optRange720">30 天</option>
+          </select>
+          <button class="btn btn-outline btn-sm" onclick="exportConfig()" id="btnExportCfg">导出配置</button>
+          <label class="btn btn-outline btn-sm" style="cursor:pointer;" id="btnImportCfg">导入配置<input type="file" accept=".json" style="display:none;" onchange="importConfig(this)"></label>
+        </div>
+      </div>
+      <!-- Daily trend chart -->
+      <div class="card mb-4">
+        <h3 class="text-sm font-semibold mb-3" style="color:var(--text3);" id="usageDailyTitle">每日用量趋势</h3>
+        <div style="height:250px;"><canvas id="chartDailyUsage"></canvas></div>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+        <!-- By Model -->
+        <div class="card">
+          <h3 class="text-sm font-semibold mb-3" style="color:var(--text3);" id="usageByModelTitle">按模型统计</h3>
+          <div style="height:250px;"><canvas id="chartByModel"></canvas></div>
+          <div class="table-wrap mt-3"><table>
+            <thead><tr><th id="thUsageModel">模型</th><th id="thUsageReq1">请求</th><th>Tokens</th><th id="thUsageSucc">成功率</th><th id="thUsageLat">延迟</th></tr></thead>
+            <tbody id="usageModelTable"></tbody>
+          </table></div>
+        </div>
+        <!-- By Channel -->
+        <div class="card">
+          <h3 class="text-sm font-semibold mb-3" style="color:var(--text3);" id="usageByChTitle">按渠道统计</h3>
+          <div style="height:250px;"><canvas id="chartByChannel"></canvas></div>
+          <div class="table-wrap mt-3"><table>
+            <thead><tr><th id="thUsageCh">渠道</th><th id="thUsageReq2">请求</th><th>Tokens</th><th id="thUsageRate">倍率</th><th id="thUsageCost">估算费用</th></tr></thead>
+            <tbody id="usageChTable"></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Accounts Tab -->
+    <div id="tab-accounts" style="display:none;padding:16px 24px;">
+      <div class="flex justify-between items-center mb-4">
+        <h1 class="text-xl font-bold" id="accountsTitle">账户管理</h1>
+        <div class="flex gap-2">
+          <button class="btn btn-primary btn-xs" onclick="openAddAccount()" id="btnAddAccount">+ 新增账户</button>
+          <button class="btn btn-outline btn-xs" onclick="checkinAll()" id="btnCheckinAll">🎁 全部签到</button>
+          <button class="btn btn-outline btn-xs" onclick="refreshAllBalances()" id="btnRefreshBal">💰 刷新余额</button>
+        </div>
+      </div>
+      <div id="accountCards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;"></div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div id="tab-settings" style="display:none;padding:16px 24px;">
+      <h1 style="font-size:18px;font-weight:700;margin-bottom:16px;color:var(--text);" id="settingsPageTitle">⚙️ 系统设置</h1>
+
+      <!-- Row 1: Webhook + Cache side by side -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+
+        <!-- Webhook Config -->
+        <div class="card" style="padding:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <span style="font-size:13px;font-weight:700;color:var(--text);" id="webhookTitle">🔔 Webhook 通知</span>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="wh_enabled" style="width:auto;accent-color:var(--accent);">
+              <span style="font-size:11px;color:var(--text2);" id="whEnableLabel">启用</span>
+            </label>
+          </div>
+          <!-- Telegram -->
+          <div style="background:var(--bg2);border-radius:8px;padding:10px;margin-bottom:8px;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+              <input type="checkbox" id="wh_tg_enabled" style="width:auto;accent-color:var(--accent);">
+              <span style="font-size:12px;font-weight:700;color:var(--text);">Telegram</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+              <div>
+                <label style="font-size:10px;color:var(--text2);display:block;margin-bottom:2px;">Bot Token</label>
+                <input id="wh_tg_token" type="text" placeholder="123456:ABCdef..." style="font-size:11px;padding:6px 8px;">
+              </div>
+              <div>
+                <label style="font-size:10px;color:var(--text2);display:block;margin-bottom:2px;">Chat ID</label>
+                <input id="wh_tg_chatId" type="text" placeholder="-100123456" style="font-size:11px;padding:6px 8px;">
+              </div>
+            </div>
+            <div style="margin-top:6px;">
+              <label style="font-size:10px;color:var(--text2);display:block;margin-bottom:2px;" id="lblWhCustomUrl">Custom URL <span style="opacity:.5">(可选)</span></label>
+              <input id="wh_tg_url" type="text" placeholder="自定义 API URL" style="font-size:11px;padding:6px 8px;">
+            </div>
+          </div>
+          <!-- Discord + HTTP -->
+          <div style="background:var(--bg2);border-radius:8px;padding:10px;margin-bottom:8px;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+              <input type="checkbox" id="wh_dc_enabled" style="width:auto;accent-color:var(--accent);">
+              <span style="font-size:12px;font-weight:700;color:var(--text);">Discord</span>
+            </div>
+            <input id="wh_dc_url" type="text" placeholder="https://discord.com/api/webhooks/..." style="font-size:11px;padding:6px 8px;">
+            <div style="display:flex;align-items:center;gap:6px;margin-top:8px;margin-bottom:6px;">
+              <input type="checkbox" id="wh_http_enabled" style="width:auto;accent-color:var(--accent);">
+              <span style="font-size:12px;font-weight:700;color:var(--text);">Generic HTTP POST</span>
+            </div>
+            <input id="wh_http_url" type="text" placeholder="https://example.com/hook" style="font-size:11px;padding:6px 8px;">
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="wh_notifyAlways" style="width:auto;accent-color:var(--accent);">
+              <span style="font-size:11px;color:var(--text2);" id="whAlwaysLabel">总是通知</span>
+            </label>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-primary btn-xs" id="btnWhSave" onclick="saveWebhook()">保存</button>
+              <button class="btn btn-outline btn-xs" id="btnWhTest" onclick="testWebhook()">测试</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cache + Tool Export + Actions stacked -->
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <!-- Cache Config -->
+          <div class="card" style="padding:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <span style="font-size:13px;font-weight:700;color:var(--text);" id="cacheTitle">⚡ 请求缓存</span>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                <input type="checkbox" id="cache_enabled" style="width:auto;accent-color:var(--accent);">
+                <span style="font-size:11px;color:var(--text2);" id="cacheEnableLabel">启用</span>
+              </label>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+              <div>
+                <label style="font-size:10px;color:var(--text2);display:block;margin-bottom:2px;" id="cacheTtlLabel">TTL (秒)</label>
+                <input id="cache_ttl" type="number" value="300" min="10" style="font-size:11px;padding:6px 8px;">
+              </div>
+              <div>
+                <label style="font-size:10px;color:var(--text2);display:block;margin-bottom:2px;" id="cacheMaxLabel">最大条目</label>
+                <input id="cache_maxSize" type="number" value="500" min="10" style="font-size:11px;padding:6px 8px;">
+              </div>
+            </div>
+            <div id="cacheStats" style="font-size:11px;color:var(--text2);margin-bottom:8px;"></div>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-primary btn-xs" id="btnCacheSave" onclick="saveCache()">保存</button>
+              <button class="btn btn-outline btn-xs" id="btnCacheClear" onclick="clearCache()">清空缓存</button>
+            </div>
+          </div>
+
+          <!-- Prompt Engine -->
+          <div class="card" style="padding:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <span style="font-size:13px;font-weight:700;color:var(--text);" id="peTitle">🧠 Prompt Engine</span>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                <input type="checkbox" id="pe_enabled" style="width:auto;accent-color:var(--accent);">
+                <span style="font-size:11px;color:var(--text2);" id="peEnableLabel">Enable</span>
+              </label>
+            </div>
+            <div style="margin-bottom:8px;">
+              <label style="font-size:10px;color:var(--text2);display:block;margin-bottom:2px;" id="peSysPromptLabel">System Prompt</label>
+              <textarea id="pe_systemPrompt" rows="3" placeholder="Injected as system message into every request..." style="font-size:11px;padding:6px 8px;width:100%;resize:vertical;min-height:60px;"></textarea>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+              <div>
+                <label style="font-size:10px;color:var(--text2);display:block;margin-bottom:2px;" id="peInjectModeLabel">Inject Mode</label>
+                <select id="pe_injectMode" style="font-size:11px;padding:6px 8px;">
+                  <option value="prepend" id="peOptPrepend">Prepend</option>
+                  <option value="append" id="peOptAppend">Append</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:10px;color:var(--text2);display:block;margin-bottom:2px;" id="peMaxMsgLabel">Max Messages</label>
+                <input id="pe_maxMessages" type="number" min="0" placeholder="0 = unlimited" style="font-size:11px;padding:6px 8px;">
+              </div>
+            </div>
+            <button class="btn btn-primary btn-xs" id="btnPeSave" onclick="savePromptEngine()">Save</button>
+          </div>
+
+          <!-- Tool Export -->
+          <div class="card" style="padding:14px;">
+            <span style="font-size:13px;font-weight:700;color:var(--text);display:block;margin-bottom:8px;" id="toolExportTitle">🔗 一键导出</span>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="btn btn-outline btn-xs" onclick="exportTool('cherrystudio')">CherryStudio</button>
+              <button class="btn btn-outline btn-xs" onclick="exportTool('cursor')">Cursor</button>
+              <button class="btn btn-outline btn-xs" onclick="exportTool('openai')">OpenAI ENV</button>
+            </div>
+            <pre id="toolExportResult" style="font-size:11px;margin-top:8px;padding:8px;border-radius:6px;background:var(--bg2);color:var(--text2);display:none;white-space:pre-wrap;max-height:150px;overflow-y:auto;"></pre>
+          </div>
+
+          <!-- Password & Update -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="card" style="padding:14px;">
+              <span style="font-size:13px;font-weight:700;color:var(--text);display:block;margin-bottom:8px;" id="settingsPwdTitle">🔑 密码</span>
+              <button class="btn btn-outline btn-xs" onclick="openPasswordModal()" id="btnOpenPwdModal">修改管理密码</button>
+            </div>
+            <div class="card" style="padding:14px;">
+              <span style="font-size:13px;font-weight:700;color:var(--text);display:block;margin-bottom:8px;" id="settingsUpdateTitle">📦 更新</span>
+              <button class="btn btn-outline btn-xs" onclick="checkUpdate()" id="btnSettingsUpdate">检查更新</button>
+            </div>
+          </div>
+
+          <!-- Config Backup -->
+          <div class="card" style="padding:14px;">
+            <span style="font-size:13px;font-weight:700;color:var(--text);display:block;margin-bottom:8px;" id="cfgBackupTitle">💾 配置备份</span>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <button class="btn btn-outline btn-xs" id="btnCfgExport" onclick="exportConfig()">导出配置</button>
+              <label class="btn btn-outline btn-xs" style="cursor:pointer;" id="btnCfgImport">导入配置<input type="file" accept=".json" onchange="importConfig(this)" style="display:none;"></label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -706,7 +987,7 @@
 const LANG = {
   zh: {
     login:'登录管理面板', tokenPlaceholder:'Admin Token', invalidToken:'Token 无效', connFail:'连接失败',
-    dashboard:'仪表盘', channels:'渠道', models:'模型', detect:'检测', users:'密钥', logs:'日志', logout:'退出',
+    dashboard:'仪表盘', channels:'渠道', models:'模型', detect:'检测', users:'密钥', logs:'日志', accounts:'账户', logout:'退出',
     req24h:'请求总数 (24h)', success:'成功', failed:'失败', avgLatency:'平均延迟',
     successRate:'成功率', updatedAt:'更新于', byModel:'按模型统计 (24h)', byChannel:'按渠道统计 (24h)',
     noData:'暂无数据', model:'模型', requests:'请求', latency:'平均延迟', channel:'渠道',
@@ -738,10 +1019,25 @@ const LANG = {
     avgScoreLabel:'平均得分', noDetectYet:'暂无检测数据，请先进行检测',
     changePwd:'修改密码', oldPwd:'当前密码', newPwd:'新密码', confirmPwd:'确认密码', pwdSubmit:'确认修改', pwdMismatch:'两次密码不一致', pwdTooShort:'密码至少 6 位', pwdOldWrong:'当前密码错误', pwdSuccess:'密码修改成功，请重新登录', settings:'系统设置',
     updateCheck:'检查更新', updateCurrent:'当前版本', updateLatest:'最新版本', updateAvailable:'发现新版本', updateUpToDate:'已是最新版本', updateNow:'立即更新', updateUpdating:'更新中...', updateSuccess:'更新成功，正在重启...', updateFailed:'更新失败', updateChangelog:'更新日志', updateNoRepo:'未配置 GitHub 仓库', updateReconnect:'服务重启中，正在重连...',
+    usage:'用量统计', usageDaily:'每日用量趋势', usageByModel:'按模型统计', usageByCh:'按渠道统计', costRate:'计费倍率', estCost:'估算费用', exportCfg:'导出配置', importCfg:'导入配置', importSuccess:'配置导入成功', importFail:'导入失败', chartReqTrend:'请求趋势 (24h)', chartLatTrend:'延迟 & 成功率 (24h)',
+    whTitle:'🔔 Webhook 通知', whEnable:'启用', whAlways:'总是通知', whSave:'保存', whTest:'测试', whCustomUrl:'自定义 API URL',
+    cacheTitle:'⚡ 请求缓存', cacheTtl:'TTL (秒)', cacheMax:'最大条目', cacheSave:'保存', cacheClear:'清空缓存',
+    toolExport:'🔗 一键导出', settingsPwd:'🔑 密码', settingsChangePwd:'修改管理密码', settingsUpdate:'📦 更新', settingsCheckUpdate:'检查更新',
+    configBackup:'💾 配置备份', configExport:'导出配置', configImport:'导入配置',
+    // Newly tagged statics
+    addCh2:'+ 添加渠道', queryBalance:'💰 余额', reloadCfg2:'刷新配置',
+    accountsTitle:'账户管理', addAccount2:'+ 新增账户', checkinAll:'🎁 全部签到', refreshBal:'💰 刷新余额',
+    statTotalLabel:'请求总数 (24h)', statSuccessLabel:'成功', statFailedLabel:'失败', statAvgMsLabel:'平均延迟',
+    whCustomUrlLabel:'Custom URL (可选)', whAlways2:'总是通知', whSave2:'保存', whTest2:'测试',
+    cacheEnabled:'启用', cacheSave2:'保存', cacheClear2:'清空缓存',
+    cfgBackupTitle:'💾 配置备份', cfgExport2:'导出配置', cfgImport2:'导入配置',
+    settingsTitle:'⚙️ 系统设置', pwdModalBtn:'修改管理密码',
+    range24h:'24小时', range3d:'3 天', range7d:'7 天', range30d:'30 天',
+    peTitle:'🧠 Prompt Engine', peEnable:'启用', peSysPrompt:'System Prompt', peInjectMode:'注入模式', peMaxMsg:'最大消息数', pePrepend:'前置 (Prepend)', peAppend:'追加 (Append)', peSave:'保存', peSysPromptHint:'将注入到每个请求的 system 消息...', peMaxMsgHint:'0 = 不限',
   },
   en: {
     login:'Login', tokenPlaceholder:'Admin Token', invalidToken:'Invalid token', connFail:'Connection failed',
-    dashboard:'Dashboard', channels:'Channels', models:'Models', detect:'Detect', users:'Keys', logs:'Logs', logout:'Logout',
+    dashboard:'Dashboard', channels:'Channels', models:'Models', detect:'Detect', users:'Keys', logs:'Logs', accounts:'Accounts', logout:'Logout',
     req24h:'Requests (24h)', success:'Success', failed:'Failed', avgLatency:'Avg Latency',
     successRate:'success rate', updatedAt:'Updated at', byModel:'By Model (24h)', byChannel:'By Channel (24h)',
     noData:'No data', model:'Model', requests:'Requests', latency:'Avg Latency', channel:'Channel',
@@ -773,6 +1069,21 @@ const LANG = {
     avgScoreLabel:'Avg Score', noDetectYet:'No detection data yet. Run detection first.',
     changePwd:'Change Password', oldPwd:'Current Password', newPwd:'New Password', confirmPwd:'Confirm Password', pwdSubmit:'Confirm', pwdMismatch:'Passwords do not match', pwdTooShort:'Password must be at least 6 characters', pwdOldWrong:'Current password incorrect', pwdSuccess:'Password changed, please re-login', settings:'Settings',
     updateCheck:'Check Update', updateCurrent:'Current', updateLatest:'Latest', updateAvailable:'Update Available', updateUpToDate:'Up to date', updateNow:'Update Now', updateUpdating:'Updating...', updateSuccess:'Update complete, restarting...', updateFailed:'Update failed', updateChangelog:'Changelog', updateNoRepo:'GitHub repo not configured', updateReconnect:'Service restarting, reconnecting...',
+    usage:'Usage Stats', usageDaily:'Daily Usage Trend', usageByModel:'By Model', usageByCh:'By Channel', costRate:'Cost Rate', estCost:'Est. Cost', exportCfg:'Export Config', importCfg:'Import Config', importSuccess:'Config imported', importFail:'Import failed', chartReqTrend:'Request Trend (24h)', chartLatTrend:'Latency & Success (24h)',
+    whTitle:'🔔 Webhook Notifications', whEnable:'Enable', whAlways:'Always notify', whSave:'Save', whTest:'Test', whCustomUrl:'Custom API URL',
+    cacheTitle:'⚡ Request Cache', cacheTtl:'TTL (sec)', cacheMax:'Max Entries', cacheSave:'Save', cacheClear:'Clear Cache',
+    toolExport:'🔗 Export to Tools', settingsPwd:'🔑 Password', settingsChangePwd:'Change Admin Password', settingsUpdate:'📦 Update', settingsCheckUpdate:'Check Update',
+    configBackup:'💾 Config Backup', configExport:'Export Config', configImport:'Import Config',
+    // Newly tagged statics
+    addCh2:'+ Add Channel', queryBalance:'💰 Balance', reloadCfg2:'Reload Config',
+    accountsTitle:'Accounts', addAccount2:'+ Add Account', checkinAll:'🎁 Check-in All', refreshBal:'💰 Refresh Balance',
+    statTotalLabel:'Total (24h)', statSuccessLabel:'Success', statFailedLabel:'Failed', statAvgMsLabel:'Avg Latency',
+    whCustomUrlLabel:'Custom URL (optional)', whAlways2:'Always notify', whSave2:'Save', whTest2:'Test',
+    cacheEnabled:'Enabled', cacheSave2:'Save', cacheClear2:'Clear Cache',
+    cfgBackupTitle:'💾 Config Backup', cfgExport2:'Export Config', cfgImport2:'Import Config',
+    settingsTitle:'⚙️ Settings', pwdModalBtn:'Change Password',
+    range24h:'24h', range3d:'3 days', range7d:'7 days', range30d:'30 days',
+    peTitle:'🧠 Prompt Engine', peEnable:'Enable', peSysPrompt:'System Prompt', peInjectMode:'Inject Mode', peMaxMsg:'Max Messages', pePrepend:'Prepend', peAppend:'Append', peSave:'Save', peSysPromptHint:'Injected as system message into every request...', peMaxMsgHint:'0 = unlimited',
   }
 };
 const PROBE_I18N = {
@@ -801,12 +1112,54 @@ function applyTheme() {
   const btn = document.getElementById('themeToggle');
   if (btn) btn.textContent = curTheme === 'dark' ? `◐ ${t('themeLight')}` : `◑ ${t('themeDark')}`;
 }
+// ID → i18n key mapping for static elements
+const STATIC_I18N = {
+  // Dashboard
+  dashTitle: 'dashboard',
+  lblStatTotal: 'statTotalLabel', lblStatSuccess: 'statSuccessLabel', lblStatFailed: 'statFailedLabel', lblStatAvgMs: 'statAvgMsLabel',
+  chartReqTitle: 'chartReqTrend', chartLatTitle: 'chartLatTrend',
+  dashByModelTitle: 'byModel', dashByChTitle: 'byChannel',
+  thModel1: 'model', thReq1: 'requests', thSuccRate1: 'successRate', thAvgLat1: 'avgLatency',
+  thCh1: 'channel', thReq2: 'requests', thSuccRate2: 'successRate', thAvgLat2: 'avgLatency',
+  // Channels
+  chMgmtTitle: 'channelMgmt', btnReloadCfg: 'reloadCfg2', btnAddCh: 'addCh2',
+  // Models
+  modelTabTitle: 'modelList',
+  // Keys
+  keyMgmtTitle: 'userMgmt', btnAddKey: 'addUser',
+  // Logs
+  logTitle: 'reqLogs', btnLogRefresh: 'refresh',
+  thLogTime: 'time2', thLogModel: 'model', thLogCh: 'channel', thLogStatus: 'statusCode', thLogLat: 'latency', thLogErr: 'error',
+  // Usage
+  usageTitle: 'usage', btnExportCfg: 'exportCfg', btnImportCfg: 'importCfg',
+  usageDailyTitle: 'usageDaily', usageByModelTitle: 'usageByModel', usageByChTitle: 'usageByCh',
+  thUsageModel: 'model', thUsageReq1: 'requests', thUsageSucc: 'successRate', thUsageLat: 'latency',
+  thUsageCh: 'channel', thUsageReq2: 'requests', thUsageRate: 'costRate', thUsageCost: 'estCost',
+  // Accounts
+  accountsTitle: 'accountsTitle', btnAddAccount: 'addAccount2', btnCheckinAll: 'checkinAll', btnRefreshBal: 'refreshBal',
+  // Settings
+  settingsPageTitle: 'settingsTitle',
+  webhookTitle: 'whTitle', whEnableLabel: 'whEnable', lblWhCustomUrl: 'whCustomUrlLabel',
+  whAlwaysLabel: 'whAlways2', btnWhSave: 'whSave2', btnWhTest: 'whTest2',
+  cacheTitle: 'cacheTitle', cacheEnableLabel: 'cacheEnabled', cacheTtlLabel: 'cacheTtl', cacheMaxLabel: 'cacheMax',
+  btnCacheSave: 'cacheSave2', btnCacheClear: 'cacheClear2',
+  toolExportTitle: 'toolExport',
+  settingsPwdTitle: 'settingsPwd', btnOpenPwdModal: 'pwdModalBtn',
+  settingsUpdateTitle: 'settingsUpdate', btnSettingsUpdate: 'settingsCheckUpdate',
+  cfgBackupTitle: 'cfgBackupTitle', btnCfgExport: 'cfgExport2', btnCfgImport: 'cfgImport2',
+  // Usage range dropdown
+  optRange24: 'range24h', optRange72: 'range3d', optRange168: 'range7d', optRange720: 'range30d',
+  // Prompt Engine
+  peTitle: 'peTitle', peEnableLabel: 'peEnable', peSysPromptLabel: 'peSysPrompt', peInjectModeLabel: 'peInjectMode', peMaxMsgLabel: 'peMaxMsg',
+  peOptPrepend: 'pePrepend', peOptAppend: 'peAppend', btnPeSave: 'peSave',
+};
+
 function applyLang() {
   const $ = id => document.getElementById(id);
   // Sidebar items
   document.querySelectorAll('.sidebar-item').forEach(el => {
     const tab = el.dataset.tab;
-    const map = { dashboard:'dashboard', channels:'channels', models:'models', detect:'detect', users:'users', logs:'logs', settings:'settings' };
+    const map = { dashboard:'dashboard', channels:'channels', models:'models', detect:'detect', users:'users', logs:'logs', usage:'usage', accounts:'accounts', settings:'settings' };
     if (map[tab]) {
       const svg = el.querySelector('svg')?.outerHTML || '';
       el.innerHTML = svg + '\n      ' + t(map[tab]);
@@ -819,6 +1172,11 @@ function applyLang() {
   // Login
   const loginBtn = document.querySelector('#loginScreen .btn-primary');
   if (loginBtn) loginBtn.textContent = t('login');
+  // Apply all static element translations
+  for (const [id, key] of Object.entries(STATIC_I18N)) {
+    const el = $(id);
+    if (el) el.textContent = t(key);
+  }
   // Refresh current tab data
   const activeTab = document.querySelector('.sidebar-item.active')?.dataset?.tab;
   if (activeTab) switchTab(activeTab);
@@ -974,6 +1332,9 @@ function switchTab(name) {
   if (name === 'detect') loadDetectTab();
   if (name === 'users') loadUsers();
   if (name === 'logs') loadLogs();
+  if (name === 'usage') loadUsage();
+  if (name === 'accounts') loadAccounts();
+  if (name === 'settings') { loadWebhookConfig(); loadCacheConfig(); loadPromptEngine(); }
 }
 function loadAll() { loadStats(); loadChannels(); }
 
@@ -1018,6 +1379,15 @@ async function loadStats() {
   document.getElementById('statByChannel').innerHTML = (d.byChannel || []).map(c =>
     `<tr><td class="text-xs">${esc(c.channel_name||'CH'+c.channel_id)}</td><td>${c.count}</td><td>${c.count ? Math.round(c.success/c.count*100) : 0}%</td><td>${Math.round(c.avg_duration||0)}ms</td></tr>`
   ).join('') || `<tr><td colspan="4" style="color:var(--text3);" class="text-center py-4">${t('noData')}</td></tr>`;
+
+  // Update chart titles i18n
+  const crt = document.getElementById('chartReqTitle');
+  if (crt) crt.textContent = t('chartReqTrend');
+  const clt = document.getElementById('chartLatTitle');
+  if (clt) clt.textContent = t('chartLatTrend');
+
+  // Load dashboard charts
+  loadDashboardCharts();
 
   // Load detection health overview
   loadDetectOverview();
@@ -1169,6 +1539,7 @@ async function loadChannels() {
           <span class="ch-meta-endpoint" title="${esc(ch.endpoint)}">${esc(ch.endpoint)}</span>
           <span class="badge badge-blue">${models.length} ${t('modelsCount')}</span>
           <span class="badge badge-purple">${ch.keys?.length||0} ${t('keysCount')}</span>
+          <span id="balanceBadge_${ch.id}"></span>
         </div>
         <div class="ch-actions" onclick="event.stopPropagation()">
           <button class="btn btn-outline btn-xs" onclick="showEditChannel(${ch.id})">${t('edit')}</button>
@@ -1368,10 +1739,51 @@ async function deleteChannel(id) {
   toast(curLang==='zh'?'已删除':'Deleted', 'green'); loadChannels();
 }
 
+const PROVIDER_PRESETS = {
+  'openai':      { label: 'OpenAI',      endpoint: 'https://api.openai.com/v1',           type: 'openai',    balanceType: 'openai' },
+  'anthropic':   { label: 'Anthropic',   endpoint: 'https://api.anthropic.com',           type: 'anthropic', balanceType: '' },
+  'minimax':     { label: 'MiniMax 官方', endpoint: 'https://api.minimaxi.com/v1',         type: 'openai',    balanceType: '' },
+  'opencode-zen':{ label: 'OpenCode Zen', endpoint: 'https://opencode.ai/zen/v1',          type: 'openai',    balanceType: '' },
+  'deepseek':    { label: 'DeepSeek',    endpoint: 'https://api.deepseek.com/v1',         type: 'openai',    balanceType: '' },
+  'moonshot':    { label: 'Moonshot Kimi', endpoint: 'https://api.moonshot.cn/v1',        type: 'openai',    balanceType: '' },
+  'groq':        { label: 'Groq',        endpoint: 'https://api.groq.com/openai/v1',      type: 'openai',    balanceType: '' },
+  'openrouter':  { label: 'OpenRouter',  endpoint: 'https://openrouter.ai/api/v1',        type: 'openai',    balanceType: '' },
+  'together':    { label: 'Together AI', endpoint: 'https://api.together.xyz/v1',         type: 'openai',    balanceType: '' },
+  'xai':         { label: 'xAI Grok',    endpoint: 'https://api.x.ai/v1',                 type: 'openai',    balanceType: '' },
+  'siliconflow': { label: 'SiliconFlow', endpoint: 'https://api.siliconflow.cn/v1',       type: 'openai',    balanceType: '' },
+  'zai':         { label: 'Z.AI GLM',    endpoint: 'https://api.z.ai/api/paas/v4',        type: 'openai',    balanceType: '' },
+  'new-api':     { label: 'New-API 中转站', endpoint: '',                                  type: 'openai',    balanceType: 'new-api' },
+  'sub2api':     { label: 'Sub2API 中转站', endpoint: '',                                   type: 'openai',    balanceType: '' },
+  'custom':      { label: '自定义 / Custom', endpoint: '',                                 type: 'openai',    balanceType: '' },
+};
+
+function applyProviderPreset(prefix) {
+  const sel = document.getElementById(prefix + '_provider').value;
+  if (!sel || sel === 'custom') return;
+  const p = PROVIDER_PRESETS[sel];
+  if (!p) return;
+  if (p.endpoint) document.getElementById(prefix + '_endpoint').value = p.endpoint;
+  document.getElementById(prefix + '_type').value = p.type;
+  if (document.getElementById(prefix + '_balanceType')) {
+    document.getElementById(prefix + '_balanceType').value = p.balanceType;
+  }
+  if (!document.getElementById(prefix + '_name').value) {
+    document.getElementById(prefix + '_name').value = p.label;
+  }
+}
+
 function showAddChannel() {
   const zh = curLang==='zh';
+  const presetOpts = Object.entries(PROVIDER_PRESETS)
+    .map(([k,v]) => `<option value="${k}">${v.label}</option>`).join('');
   showModal(zh?'添加渠道':'Add Channel', `
     <div class="space-y-3">
+      <div><label class="text-xs text-gray-400">${zh?'快速预设':'Quick Preset'}</label>
+        <select id="ch_provider" onchange="applyProviderPreset('ch')">
+          <option value="">${zh?'-- 选择常见 Provider --':'-- Pick a common provider --'}</option>
+          ${presetOpts}
+        </select>
+      </div>
       <div><label class="text-xs text-gray-400">${zh?'名称':'Name'}</label><input id="ch_name" placeholder="My Provider"></div>
       <div class="grid grid-cols-2 gap-3">
         <div><label class="text-xs text-gray-400">${zh?'协议类型':'Protocol'}</label><select id="ch_type"><option value="openai">OpenAI</option><option value="anthropic">Anthropic</option></select></div>
@@ -1387,10 +1799,12 @@ function showAddChannel() {
         <div id="ch_modelPicker" class="mp-container"></div>
         <textarea id="ch_models" rows="2" placeholder="gpt-4o, gpt-4o-mini"></textarea>
       </div>
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-3 gap-3">
         <div><label class="text-xs text-gray-400">${zh?'权重':'Weight'}</label><input id="ch_weight" type="number" value="10"></div>
-        <div><label class="text-xs text-gray-400">${zh?'模型映射':'Model Mapping'} (JSON)</label><input id="ch_mapping" placeholder='{}' value="{}"></div>
+        <div><label class="text-xs text-gray-400">${zh?'成本率':'Cost Rate'}</label><input id="ch_costRate" type="number" step="0.1" value="1.0"></div>
+        <div><label class="text-xs text-gray-400">${zh?'余额类型':'Balance API'}</label><select id="ch_balanceType"><option value="">--</option><option value="new-api">New-API</option><option value="one-api">One-API</option><option value="openai">OpenAI</option><option value="close-ai">CloseAI</option></select></div>
       </div>
+      <div><label class="text-xs text-gray-400">${zh?'模型映射':'Model Mapping'} (JSON)</label><input id="ch_mapping" placeholder='{}' value="{}"></div>
       <button class="btn btn-primary w-full mt-2" onclick="submitAddChannel()">${zh?'添加':'Add'}</button>
     </div>
   `);
@@ -1408,6 +1822,8 @@ async function submitAddChannel() {
     keys, models, modelMapping: mapping,
     weight: parseInt(document.getElementById('ch_weight').value) || 10,
     priority: parseInt(document.getElementById('ch_priority').value) || 1,
+    costRate: parseFloat(document.getElementById('ch_costRate').value) || 1.0,
+    balanceType: document.getElementById('ch_balanceType').value || undefined,
   };
   if (!ch.name || !ch.endpoint || !keys.length) { toast(curLang==='zh'?'请填写必填项':'Please fill required fields', 'red'); return; }
   const d = await api('POST', '/admin/channels', ch);
@@ -1436,10 +1852,12 @@ async function showEditChannel(id) {
         <div id="ed_modelPicker" class="mp-container"></div>
         <textarea id="ed_models" rows="2">${(ch.models||[]).join(', ')}</textarea>
       </div>
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-3 gap-3">
         <div><label class="text-xs text-gray-400">${zh?'权重':'Weight'}</label><input id="ed_weight" type="number" value="${ch.weight}"></div>
-        <div><label class="text-xs text-gray-400">${zh?'状态':'Status'}</label><select id="ed_status"><option value="enabled" ${ch.status==='enabled'?'selected':''}>${zh?'启用':'Enabled'}</option><option value="disabled" ${ch.status==='disabled'?'selected':''}>${zh?'禁用':'Disabled'}</option></select></div>
+        <div><label class="text-xs text-gray-400">${zh?'成本率':'Cost Rate'}</label><input id="ed_costRate" type="number" step="0.1" value="${ch.costRate||1.0}"></div>
+        <div><label class="text-xs text-gray-400">${zh?'余额类型':'Balance API'}</label><select id="ed_balanceType"><option value="">--</option><option value="new-api" ${ch.balanceType==='new-api'?'selected':''}>New-API</option><option value="one-api" ${ch.balanceType==='one-api'?'selected':''}>One-API</option><option value="openai" ${ch.balanceType==='openai'?'selected':''}>OpenAI</option><option value="close-ai" ${ch.balanceType==='close-ai'?'selected':''}>CloseAI</option></select></div>
       </div>
+      <div><label class="text-xs text-gray-400">${zh?'状态':'Status'}</label><select id="ed_status" style="width:auto;"><option value="enabled" ${ch.status==='enabled'?'selected':''}>${zh?'启用':'Enabled'}</option><option value="disabled" ${ch.status==='disabled'?'selected':''}>${zh?'禁用':'Disabled'}</option></select></div>
       <button class="btn btn-primary w-full mt-2" onclick="submitEditChannel(${id})">${zh?'保存':'Save'}</button>
     </div>
   `);
@@ -1455,6 +1873,8 @@ async function submitEditChannel(id) {
     weight: parseInt(document.getElementById('ed_weight').value) || 10,
     priority: parseInt(document.getElementById('ed_priority').value) || 1,
     status: document.getElementById('ed_status').value,
+    costRate: parseFloat(document.getElementById('ed_costRate').value) || 1.0,
+    balanceType: document.getElementById('ed_balanceType').value || undefined,
   };
   if (keysRaw) updates.keys = keysRaw.split('\n').map(k => k.trim()).filter(Boolean);
   const d = await api('PUT', `/admin/channels/${id}`, updates);
@@ -1479,15 +1899,22 @@ async function loadModels() {
   if (baa) baa.textContent = curLang==='zh'?'+ 添加别名':'+ Add Alias';
   const bsa = document.getElementById('btnSaveAlias');
   if (bsa) bsa.textContent = curLang==='zh'?'保存':'Save';
+  // i18n fallback panel
+  const fpt = document.getElementById('fallbackPanelTitle');
+  if (fpt) fpt.textContent = curLang==='zh'?'模型 Fallback 链':'Model Fallback Chain';
+  const fd = document.getElementById('fallbackDesc');
+  if (fd) fd.textContent = curLang==='zh'?'当某模型在所有渠道均不可用时，按顺序尝试降级到备选模型。':'When a model is unavailable on all channels, automatically try fallback models in order.';
   loadAliases();
   const d = await api('GET', '/admin/models');
-  document.getElementById('modelList').innerHTML = (d.models || []).map(m => `
-    <tr>
-      <td class="font-mono text-xs">${esc(m.id)}</td>
-      <td>${m.channels.map(c => `<span class="badge badge-blue mr-1 mb-1">${esc(c.name)} <span style="color:var(--text4);">P${c.priority}</span></span>`).join('')}</td>
+  document.getElementById('modelList').innerHTML = (d.models || []).map(m => {
+    const costRange = m.channels.length > 1 && m.minCost !== m.maxCost
+      ? ` <span class="badge badge-amber" style="font-size:9px;">${m.minCost}x~${m.maxCost}x</span>` : '';
+    return `<tr>
+      <td class="font-mono text-xs">${esc(m.id)}${costRange}</td>
+      <td>${m.channels.map(c => `<span class="badge badge-blue mr-1 mb-1">${esc(c.name)} <span style="color:var(--text4);">P${c.priority} ${c.costRate !== 1.0 ? c.costRate+'x' : ''}</span></span>`).join('')}</td>
       <td style="color:var(--text3);">${m.channels.length}</td>
-    </tr>
-  `).join('') || `<tr><td colspan="3" style="color:var(--text3);" class="text-center py-8">${t('noModels')}</td></tr>`;
+    </tr>`;
+  }).join('') || `<tr><td colspan="3" style="color:var(--text3);" class="text-center py-8">${t('noModels')}</td></tr>`;
 }
 
 // ── Alias Management ──
@@ -1538,6 +1965,56 @@ async function saveAliases() {
   toast(curLang==='zh' ? '别名已保存，模型索引已重建' : 'Aliases saved, model index rebuilt', 'green');
   document.getElementById('aliasPanel').style.display = 'none';
   loadModels();
+}
+
+// ── Model Fallback Chain ──
+function toggleFallbackPanel() {
+  const p = document.getElementById('fallbackPanel');
+  if (p.style.display === 'none') { p.style.display = 'block'; loadFallbacks(); }
+  else p.style.display = 'none';
+}
+
+async function loadFallbacks() {
+  const d = await api('GET', '/admin/model-fallback');
+  const fb = d.modelFallback || {};
+  const container = document.getElementById('fallbackRows');
+  container.innerHTML = '';
+  for (const [model, chain] of Object.entries(fb)) {
+    _addFallbackRowHTML(container, model, chain.join(', '));
+  }
+  if (!Object.keys(fb).length) _addFallbackRowHTML(container, '', '');
+}
+
+function _addFallbackRowHTML(container, model, chain) {
+  const row = document.createElement('div');
+  row.className = 'flex gap-2 mb-2 items-center';
+  const zh = curLang === 'zh';
+  row.innerHTML = `
+    <input type="text" placeholder="${zh?'主模型 (如 claude-opus-4-7)':'Primary model'}" value="${esc(model)}" class="fb-model" style="flex:1;font-size:12px;">
+    <span style="color:var(--text3);font-size:12px;">→</span>
+    <input type="text" placeholder="${zh?'降级链，逗号分隔 (如 claude-sonnet-4, gpt-4o)':'Fallback chain, comma separated'}" value="${esc(chain)}" class="fb-chain" style="flex:2;font-size:12px;">
+    <button class="btn btn-danger btn-xs" onclick="this.parentElement.remove()" style="padding:2px 8px;">✕</button>
+  `;
+  container.appendChild(row);
+}
+
+function addFallbackRow() {
+  _addFallbackRowHTML(document.getElementById('fallbackRows'), '', '');
+}
+
+async function saveFallbacks() {
+  const rows = document.getElementById('fallbackRows').querySelectorAll('.flex');
+  const modelFallback = {};
+  rows.forEach(row => {
+    const model = row.querySelector('.fb-model').value.trim();
+    const chainStr = row.querySelector('.fb-chain').value.trim();
+    if (!model || !chainStr) return;
+    modelFallback[model] = chainStr.split(',').map(s => s.trim()).filter(Boolean);
+  });
+  const d = await api('PUT', '/admin/model-fallback', { modelFallback });
+  if (d.error) { toast(d.error, 'red'); return; }
+  toast(curLang==='zh' ? 'Fallback 链已保存' : 'Fallback chain saved', 'green');
+  document.getElementById('fallbackPanel').style.display = 'none';
 }
 
 // ── Logs ──
@@ -1809,23 +2286,43 @@ function toggleDetectSettings() {
 }
 
 async function loadDetectConfig() {
-  const d = await api('GET', '/admin/detect-config');
+  const [d, cs] = await Promise.all([
+    api('GET', '/admin/detect-config'),
+    api('GET', '/admin/cron-status')
+  ]);
   document.getElementById('cfg_sampleRate').value = d.sampleRate || '';
+  document.getElementById('cfg_cronExpression').value = d.cronExpression || '';
   document.getElementById('cfg_cronInterval').value = d.cronIntervalHours || '';
+  document.getElementById('cfg_cronTimezone').value = d.cronTimezone || '';
   document.getElementById('cfg_degradeThreshold').value = d.degradeThreshold || '';
   document.getElementById('cfg_degradeAction').value = d.degradeAction || 'weight';
+  // Show cron status
+  const badge = document.getElementById('cronStatusBadge');
+  if (badge && cs.mode) {
+    const zh = curLang === 'zh';
+    const modeLabel = { cron: '🟢 Cron', interval: '🟡 Interval', none: '⚫ Off' };
+    badge.innerHTML = `<span class="badge ${cs.mode==='cron'?'badge-green':cs.mode==='interval'?'badge-amber':'badge-gray'}">${modeLabel[cs.mode]||cs.mode}</span>${cs.running ? ` <span class="badge badge-amber">${zh?'运行中':'Running'}</span>` : ''}`;
+  }
 }
 
 async function saveDetectConfig() {
   const d = await api('PUT', '/admin/detect-config', {
     sampleRate: parseFloat(document.getElementById('cfg_sampleRate').value) || 0,
+    cronExpression: document.getElementById('cfg_cronExpression').value.trim(),
     cronIntervalHours: parseInt(document.getElementById('cfg_cronInterval').value) || 0,
+    cronTimezone: document.getElementById('cfg_cronTimezone').value.trim(),
     degradeThreshold: parseInt(document.getElementById('cfg_degradeThreshold').value) || 0,
     degradeAction: document.getElementById('cfg_degradeAction').value,
   });
   if (d.error) { toast(d.error, 'red'); return; }
   toast(curLang === 'zh' ? '检测设置已保存' : 'Detection settings saved', 'green');
-  document.getElementById('detectSettingsPanel').style.display = 'none';
+  // Update status badge with response
+  if (d.cronStatus) {
+    const badge = document.getElementById('cronStatusBadge');
+    const zh = curLang === 'zh';
+    const modeLabel = { cron: '🟢 Cron', interval: '🟡 Interval', none: '⚫ Off' };
+    badge.innerHTML = `<span class="badge ${d.cronStatus.mode==='cron'?'badge-green':d.cronStatus.mode==='interval'?'badge-amber':'badge-gray'}">${modeLabel[d.cronStatus.mode]||d.cronStatus.mode}</span>`;
+  }
 }
 
 let _detectRunning = false;
@@ -2442,6 +2939,816 @@ async function doChangePassword() {
     errEl.textContent = err.message;
     errEl.style.display = '';
   }
+}
+
+// ══════════════════════════════════════════
+// CHARTS & USAGE STATS
+// ══════════════════════════════════════════
+const _charts = {};
+const CHART_COLORS = ['#6366f1','#22c55e','#f59e0b','#ef4444','#3b82f6','#ec4899','#8b5cf6','#14b8a6','#f97316','#06b6d4'];
+
+function getChartDefaults() {
+  const isDark = curTheme === 'dark';
+  return {
+    color: isDark ? '#94a3b8' : '#64748b',
+    gridColor: isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)',
+    bg: isDark ? '#111118' : '#ffffff',
+  };
+}
+
+function makeOrUpdate(id, cfg) {
+  if (_charts[id]) { _charts[id].destroy(); }
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  _charts[id] = new Chart(ctx, cfg);
+}
+
+async function loadDashboardCharts() {
+  const d = await api('GET', '/admin/stats/hourly?hours=24');
+  if (!d.data || !d.data.length) return;
+  const cd = getChartDefaults();
+  const labels = d.data.map(h => new Date(h.hour_ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
+  // Request trend chart
+  makeOrUpdate('chartHourlyReq', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: t('success'), data: d.data.map(h => h.success), backgroundColor: '#22c55e80', borderRadius: 4 },
+        { label: t('failed'), data: d.data.map(h => h.failed), backgroundColor: '#ef444480', borderRadius: 4 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: cd.color, font: { size: 11 } } } },
+      scales: {
+        x: { stacked: true, ticks: { color: cd.color, font: { size: 10 }, maxRotation: 0 }, grid: { display: false } },
+        y: { stacked: true, ticks: { color: cd.color, font: { size: 10 } }, grid: { color: cd.gridColor } }
+      }
+    }
+  });
+  // Latency & success rate chart
+  makeOrUpdate('chartHourlyLat', {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: t('avgLatency'), data: d.data.map(h => Math.round(h.avg_duration || 0)), borderColor: '#f59e0b', backgroundColor: '#f59e0b20', fill: true, tension: 0.3, yAxisID: 'y', pointRadius: 2 },
+        { label: t('successRate'), data: d.data.map(h => h.total ? Math.round(h.success / h.total * 100) : 0), borderColor: '#22c55e', backgroundColor: '#22c55e20', fill: false, tension: 0.3, yAxisID: 'y1', pointRadius: 2 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: cd.color, font: { size: 11 } } } },
+      scales: {
+        x: { ticks: { color: cd.color, font: { size: 10 }, maxRotation: 0 }, grid: { display: false } },
+        y: { type: 'linear', position: 'left', ticks: { color: '#f59e0b', font: { size: 10 }, callback: v => v + 'ms' }, grid: { color: cd.gridColor } },
+        y1: { type: 'linear', position: 'right', min: 0, max: 100, ticks: { color: '#22c55e', font: { size: 10 }, callback: v => v + '%' }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+// ── Usage Stats Tab ──
+async function loadUsage() {
+  const zh = curLang === 'zh';
+  const h1 = document.getElementById('usageTitle');
+  if (h1) h1.textContent = t('usage');
+  const dt = document.getElementById('usageDailyTitle');
+  if (dt) dt.textContent = t('usageDaily');
+  const mt = document.getElementById('usageByModelTitle');
+  if (mt) mt.textContent = t('usageByModel');
+  const ct = document.getElementById('usageByChTitle');
+  if (ct) ct.textContent = t('usageByCh');
+  const ec = document.getElementById('btnExportCfg');
+  if (ec) ec.textContent = t('exportCfg');
+  const ic = document.getElementById('btnImportCfg');
+  if (ic) ic.childNodes[0].textContent = t('importCfg');
+
+  const hours = parseInt(document.getElementById('usageRange').value) || 168;
+  const days = Math.max(1, Math.ceil(hours / 24));
+  const [usage, daily] = await Promise.all([
+    api('GET', `/admin/stats/usage?hours=${hours}`),
+    api('GET', `/admin/stats/daily?days=${days}`)
+  ]);
+  const cd = getChartDefaults();
+
+  // Daily trend
+  if (daily.data && daily.data.length) {
+    const labels = daily.data.map(d => new Date(d.day_ts).toLocaleDateString([], {month:'short',day:'numeric'}));
+    makeOrUpdate('chartDailyUsage', {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Tokens', data: daily.data.map(d => d.total_tokens || 0), borderColor: '#6366f1', backgroundColor: '#6366f120', fill: true, tension: 0.3, yAxisID: 'y', pointRadius: 3 },
+          { label: zh ? '请求' : 'Requests', data: daily.data.map(d => d.total || 0), borderColor: '#22c55e', borderDash: [4,4], fill: false, tension: 0.3, yAxisID: 'y1', pointRadius: 3 },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: cd.color, font: { size: 11 } } } },
+        scales: {
+          x: { ticks: { color: cd.color, font: { size: 10 } }, grid: { display: false } },
+          y: { type: 'linear', position: 'left', ticks: { color: '#6366f1', font: { size: 10 }, callback: v => fmtNum(v) }, grid: { color: cd.gridColor } },
+          y1: { type: 'linear', position: 'right', ticks: { color: '#22c55e', font: { size: 10 } }, grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  // By model chart + table
+  const byModel = usage.byModel || [];
+  if (byModel.length) {
+    const top = byModel.slice(0, 8);
+    makeOrUpdate('chartByModel', {
+      type: 'doughnut',
+      data: {
+        labels: top.map(m => m.model),
+        datasets: [{ data: top.map(m => m.total_tokens || 0), backgroundColor: CHART_COLORS.slice(0, top.length), borderWidth: 0 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'right', labels: { color: cd.color, font: { size: 10 }, boxWidth: 12, padding: 8 } } }
+      }
+    });
+    document.getElementById('usageModelTable').innerHTML = byModel.map(m =>
+      `<tr><td class="font-mono text-xs">${esc(m.model)}</td><td>${m.count}</td><td class="text-xs">${fmtNum(m.total_tokens||0)}</td><td>${m.count ? Math.round(m.success/m.count*100) : 0}%</td><td class="text-xs">${Math.round(m.avg_duration||0)}ms</td></tr>`
+    ).join('');
+  } else {
+    document.getElementById('usageModelTable').innerHTML = `<tr><td colspan="5" class="text-center py-4" style="color:var(--text3);">${t('noData')}</td></tr>`;
+  }
+
+  // By channel chart + table
+  const byCh = usage.byChannel || [];
+  if (byCh.length) {
+    makeOrUpdate('chartByChannel', {
+      type: 'bar',
+      data: {
+        labels: byCh.map(c => c.channel_name || 'CH' + c.channel_id),
+        datasets: [
+          { label: 'Prompt', data: byCh.map(c => c.prompt_tokens || 0), backgroundColor: '#6366f180', borderRadius: 4 },
+          { label: 'Completion', data: byCh.map(c => c.completion_tokens || 0), backgroundColor: '#22c55e80', borderRadius: 4 },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+        plugins: { legend: { labels: { color: cd.color, font: { size: 11 } } } },
+        scales: {
+          x: { stacked: true, ticks: { color: cd.color, font: { size: 10 }, callback: v => fmtNum(v) }, grid: { color: cd.gridColor } },
+          y: { stacked: true, ticks: { color: cd.color, font: { size: 10 } }, grid: { display: false } }
+        }
+      }
+    });
+    document.getElementById('usageChTable').innerHTML = byCh.map(c =>
+      `<tr><td class="text-xs">${esc(c.channel_name||'CH'+c.channel_id)}</td><td>${c.count}</td><td class="text-xs">${fmtNum(c.total_tokens||0)}</td><td class="text-xs">${c.costRate}x</td><td class="text-xs font-mono">${(c.estimatedCost||0).toFixed(4)}</td></tr>`
+    ).join('');
+  } else {
+    document.getElementById('usageChTable').innerHTML = `<tr><td colspan="5" class="text-center py-4" style="color:var(--text3);">${t('noData')}</td></tr>`;
+  }
+}
+
+// ── Config Export/Import ──
+async function exportConfig() {
+  try {
+    const resp = await fetch('/admin/config/export', { headers: { Authorization: 'Bearer ' + TOKEN } });
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'gateapi-config.json'; a.click();
+    URL.revokeObjectURL(url);
+    toast(curLang==='zh' ? '配置已导出' : 'Config exported', 'green');
+  } catch (e) { toast(e.message, 'red'); }
+}
+
+async function importConfig(input) {
+  const file = input.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if (!confirm(curLang==='zh' ? `确认导入配置？包含 ${data.channels?.length||0} 个渠道，当前配置将被替换（已自动备份）` : `Import config with ${data.channels?.length||0} channels? Current config will be backed up.`)) {
+      input.value = ''; return;
+    }
+    const d = await api('POST', '/admin/config/import', data);
+    if (d.error) { toast(t('importFail') + ': ' + d.error, 'red'); }
+    else { toast(`${t('importSuccess')}: ${d.channels} ${t('channels')}`, 'green'); loadChannels(); }
+  } catch (e) { toast(t('importFail') + ': ' + e.message, 'red'); }
+  input.value = '';
+}
+
+// ── Balance Monitor ──
+async function queryAllBalance() {
+  const btn = document.getElementById('btnQueryBalance');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+  try {
+    const d = await api('GET', '/admin/balance');
+    if (d.error) { toast(d.error, 'red'); return; }
+    const results = d.results || [];
+    if (!results.length) { toast(curLang==='zh' ? '无可查询渠道' : 'No channels to query', 'amber'); return; }
+    // Update channel cards with balance badges
+    for (const r of results) {
+      const badge = document.getElementById('balanceBadge_' + r.channelId);
+      if (!badge) continue;
+      if (r.ok) {
+        const pct = r.percent || 0;
+        const color = pct > 90 ? '#ef4444' : pct > 70 ? '#f59e0b' : '#22c55e';
+        badge.innerHTML = `<span class="badge" style="background:${color}20;color:${color};">$${r.remaining.toFixed(2)} / $${r.total.toFixed(2)}</span>`;
+        badge.title = `Used: $${r.used.toFixed(2)} (${pct}%)`;
+      } else {
+        badge.innerHTML = `<span class="badge badge-gray" title="${esc(r.error||'')}">N/A</span>`;
+      }
+    }
+    const ok = results.filter(r => r.ok).length;
+    toast(curLang==='zh' ? `余额查询完成 (${ok}/${results.length})` : `Balance queried (${ok}/${results.length})`, 'green');
+  } catch (e) { toast(e.message, 'red'); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = '💰 ' + (curLang==='zh'?'余额':'Balance'); } }
+}
+
+// ── Webhook Config ──
+async function loadWebhookConfig() {
+  const d = await api('GET', '/admin/webhook');
+  if (d.error) return;
+  document.getElementById('wh_enabled').checked = d.enabled || false;
+  document.getElementById('wh_notifyAlways').checked = d.notifyAlways || false;
+  document.getElementById('wh_tg_enabled').checked = d.telegram?.enabled || false;
+  document.getElementById('wh_tg_token').value = d.telegram?.token === '***' ? '' : (d.telegram?.token || '');
+  document.getElementById('wh_tg_chatId').value = d.telegram?.chatId || '';
+  document.getElementById('wh_tg_url').value = d.telegram?.url || '';
+  document.getElementById('wh_dc_enabled').checked = d.discord?.enabled || false;
+  document.getElementById('wh_dc_url').value = d.discord?.url === '***configured***' ? '' : (d.discord?.url || '');
+  document.getElementById('wh_http_enabled').checked = d.http?.enabled || false;
+  document.getElementById('wh_http_url').value = d.http?.url || '';
+  // i18n for entire settings page
+  _i18nSettings();
+}
+
+function _i18nSettings() {
+  const zh = curLang === 'zh';
+  const s = (id, key) => { const el = document.getElementById(id); if (el) el.textContent = t(key); };
+  s('settingsPageTitle', 'settings');
+  s('webhookTitle', 'whTitle');
+  s('whEnableLabel', 'whEnable');
+  s('whAlwaysLabel', 'whAlways');
+  s('cacheTitle', 'cacheTitle');
+  s('cacheEnableLabel', 'whEnable');
+  s('cacheTtlLabel', 'cacheTtl');
+  s('cacheMaxLabel', 'cacheMax');
+  s('toolExportTitle', 'toolExport');
+  s('settingsPwdTitle', 'settingsPwd');
+  s('btnOpenPwdModal', 'settingsChangePwd');
+  s('settingsUpdateTitle', 'settingsUpdate');
+  s('btnSettingsUpdate', 'settingsCheckUpdate');
+  // Non-id elements via title prefix
+  const pageTitle = document.getElementById('settingsPageTitle');
+  if (pageTitle) pageTitle.textContent = '⚙️ ' + (zh ? '系统设置' : 'Settings');
+}
+
+async function saveWebhook() {
+  const payload = {
+    enabled: document.getElementById('wh_enabled').checked,
+    notifyAlways: document.getElementById('wh_notifyAlways').checked,
+    telegram: {
+      enabled: document.getElementById('wh_tg_enabled').checked,
+      token: document.getElementById('wh_tg_token').value.trim() || undefined,
+      chatId: document.getElementById('wh_tg_chatId').value.trim(),
+      url: document.getElementById('wh_tg_url').value.trim(),
+    },
+    discord: {
+      enabled: document.getElementById('wh_dc_enabled').checked,
+      url: document.getElementById('wh_dc_url').value.trim() || undefined,
+    },
+    http: {
+      enabled: document.getElementById('wh_http_enabled').checked,
+      url: document.getElementById('wh_http_url').value.trim(),
+    },
+  };
+  const d = await api('PUT', '/admin/webhook', payload);
+  if (d.error) { toast(d.error, 'red'); return; }
+  toast(curLang === 'zh' ? 'Webhook 配置已保存' : 'Webhook config saved', 'green');
+}
+
+async function testWebhook() {
+  toast(curLang === 'zh' ? '正在发送测试通知...' : 'Sending test notification...', 'blue');
+  const d = await api('POST', '/admin/webhook/test');
+  if (d.error) { toast(d.error, 'red'); return; }
+  if (!d.results || !d.results.length) {
+    toast(curLang === 'zh' ? '没有启用的通知渠道' : 'No webhook channels enabled', 'amber');
+    return;
+  }
+  const ok = d.results.filter(r => r.ok).length;
+  const fail = d.results.filter(r => !r.ok);
+  if (fail.length === 0) {
+    toast(curLang === 'zh' ? `✅ 测试成功 (${ok} 个渠道)` : `✅ Test passed (${ok} channels)`, 'green');
+  } else {
+    toast(`${fail.map(f => `${f.type}: ${f.error}`).join('; ')}`, 'red');
+  }
+}
+
+// ── Cache Config ──
+async function loadCacheConfig() {
+  const d = await api('GET', '/admin/cache');
+  if (d.error) return;
+  document.getElementById('cache_enabled').checked = d.enabled || false;
+  document.getElementById('cache_ttl').value = d.ttlSeconds || 300;
+  document.getElementById('cache_maxSize').value = d.maxSize || 500;
+  const zh = curLang === 'zh';
+  const statsEl = document.getElementById('cacheStats');
+  if (statsEl) {
+    statsEl.textContent = zh
+      ? `当前: ${d.size}/${d.maxSize} 条 | 命中: ${d.totalHits} 次 | 过期: ${d.expired} 条`
+      : `Current: ${d.size}/${d.maxSize} entries | Hits: ${d.totalHits} | Expired: ${d.expired}`;
+  }
+}
+
+async function saveCache() {
+  const d = await api('PUT', '/admin/cache', {
+    enabled: document.getElementById('cache_enabled').checked,
+    ttlSeconds: parseInt(document.getElementById('cache_ttl').value) || 300,
+    maxSize: parseInt(document.getElementById('cache_maxSize').value) || 500,
+  });
+  if (d.error) { toast(d.error, 'red'); return; }
+  toast(curLang === 'zh' ? '缓存配置已保存' : 'Cache config saved', 'green');
+  loadCacheConfig();
+}
+
+async function clearCache() {
+  const d = await api('DELETE', '/admin/cache');
+  if (d.error) { toast(d.error, 'red'); return; }
+  toast(d.message, 'green');
+  loadCacheConfig();
+}
+
+// ── Prompt Engine Config ──
+async function loadPromptEngine() {
+  const d = await api('GET', '/admin/prompt-engine');
+  if (d.error) return;
+  const pe = d.promptEngine || {};
+  document.getElementById('pe_enabled').checked = pe.enabled || false;
+  document.getElementById('pe_systemPrompt').value = pe.systemPrompt || '';
+  document.getElementById('pe_injectMode').value = pe.injectMode || 'prepend';
+  document.getElementById('pe_maxMessages').value = pe.maxMessages || 0;
+  // Update placeholder i18n
+  document.getElementById('pe_systemPrompt').placeholder = t('peSysPromptHint');
+  document.getElementById('pe_maxMessages').placeholder = t('peMaxMsgHint');
+}
+
+async function savePromptEngine() {
+  const d = await api('PUT', '/admin/prompt-engine', {
+    enabled: document.getElementById('pe_enabled').checked,
+    systemPrompt: document.getElementById('pe_systemPrompt').value,
+    injectMode: document.getElementById('pe_injectMode').value,
+    maxMessages: parseInt(document.getElementById('pe_maxMessages').value) || 0,
+  });
+  if (d.error) { toast(d.error, 'red'); return; }
+  toast(curLang === 'zh' ? 'Prompt Engine 配置已保存' : 'Prompt Engine config saved', 'green');
+}
+
+// ── System Update Check ──
+async function checkUpdate() {
+  const btn = document.getElementById('btnSettingsUpdate');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ ...'; }
+  try {
+    const resp = await fetch('https://api.github.com/repos/Nasan-Duodushu/GateAPI/releases/latest', { signal: AbortSignal.timeout(10000) });
+    if (!resp.ok) throw new Error(`GitHub API ${resp.status}`);
+    const d = await resp.json();
+    const latest = d.tag_name?.replace(/^v/, '') || d.name || '?';
+    const current = document.querySelector('.sidebar .text-xs')?.textContent?.replace(/^v/, '') || '0.1.0';
+    if (latest === current || latest === '?') {
+      toast(curLang === 'zh' ? `当前已是最新版本 (v${current})` : `Already up to date (v${current})`, 'green');
+    } else {
+      showModal(curLang === 'zh' ? '发现新版本' : 'Update Available', `
+        <div class="text-center">
+          <div class="stat-num mb-2">v${esc(latest)}</div>
+          <div class="text-xs mb-4" style="color:var(--text3);">${curLang === 'zh' ? '当前版本' : 'Current'}: v${esc(current)}</div>
+          <div class="text-xs mb-4" style="color:var(--text2);text-align:left;max-height:200px;overflow-y:auto;white-space:pre-wrap;">${esc((d.body || '').slice(0, 1000))}</div>
+          <a href="${d.html_url || 'https://github.com/Nasan-Duodushu/GateAPI/releases'}" target="_blank" class="btn btn-primary w-full">${curLang === 'zh' ? '前往 GitHub 查看' : 'View on GitHub'}</a>
+          <button class="btn btn-outline w-full mt-2" onclick="closeModal()">${curLang === 'zh' ? '关闭' : 'Close'}</button>
+        </div>
+      `);
+    }
+  } catch (e) {
+    toast(curLang === 'zh' ? '检查更新失败: ' + e.message : 'Update check failed: ' + e.message, 'red');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = curLang === 'zh' ? '检查更新' : 'Check Update'; }
+  }
+}
+
+// ── Password Change ──
+function openPasswordModal() {
+  const zh = curLang === 'zh';
+  showModal(zh ? '修改管理密码' : 'Change Admin Password', `
+    <div class="space-y-3">
+      <div><label class="text-xs" style="color:var(--text3);">${zh ? '当前密码' : 'Current Password'}</label><input id="pwd_old" type="password"></div>
+      <div><label class="text-xs" style="color:var(--text3);">${zh ? '新密码' : 'New Password'}</label><input id="pwd_new" type="password"></div>
+      <div><label class="text-xs" style="color:var(--text3);">${zh ? '确认新密码' : 'Confirm Password'}</label><input id="pwd_confirm" type="password"></div>
+      <button class="btn btn-primary w-full mt-2" onclick="submitPasswordChange()">${zh ? '保存' : 'Save'}</button>
+    </div>
+  `);
+}
+
+async function submitPasswordChange() {
+  const zh = curLang === 'zh';
+  const oldPwd = document.getElementById('pwd_old').value;
+  const newPwd = document.getElementById('pwd_new').value;
+  const confirm = document.getElementById('pwd_confirm').value;
+  if (!oldPwd || !newPwd) { toast(zh ? '请填写所有字段' : 'Please fill all fields', 'red'); return; }
+  if (newPwd !== confirm) { toast(zh ? '两次密码不一致' : 'Passwords do not match', 'red'); return; }
+  const d = await api('PUT', '/admin/password', { oldPassword: oldPwd, newPassword: newPwd });
+  if (d.error) { toast(d.error, 'red'); return; }
+  toast(zh ? '密码已更新，请重新登录' : 'Password updated, please re-login', 'green');
+  closeModal();
+  TOKEN = '';
+  localStorage.removeItem('gateapi_token');
+  location.reload();
+}
+
+// ── Tool Export ──
+async function exportTool(format) {
+  const d = await api('GET', `/admin/export-tool?format=${format}`);
+  if (d.error) { toast(d.error, 'red'); return; }
+  const el = document.getElementById('toolExportResult');
+  let text = '';
+  if (format === 'cherrystudio') {
+    text = JSON.stringify(d.config, null, 2);
+  } else if (format === 'cursor') {
+    text = (d.instructions || '') + '\n\n' + JSON.stringify(d.config, null, 2);
+  } else {
+    text = d.env + '\n\n# cURL test:\n' + d.curl;
+  }
+  el.textContent = text;
+  el.style.display = 'block';
+  // Copy to clipboard
+  try {
+    await navigator.clipboard.writeText(text);
+    toast(curLang === 'zh' ? '已复制到剪贴板' : 'Copied to clipboard', 'green');
+  } catch (_) {
+    toast(curLang === 'zh' ? '请手动复制' : 'Please copy manually', 'amber');
+  }
+}
+
+// ══════════════════════════════════════════
+// Account Hub (credential-based, independent from channels)
+// ══════════════════════════════════════════
+let _accountsCache = [];
+
+const PLATFORM_LABELS = {
+  'new-api': { label: 'New-API', color: '#6366f1', icon: '🔮' },
+  'sub2api': { label: 'Sub2API', color: '#f59e0b', icon: '🔗' },
+  'unknown': { label: '未知', color: '#9ca3af', icon: '❓' },
+};
+
+async function loadAccounts() {
+  const zh = curLang === 'zh';
+  const title = document.getElementById('accountsTitle');
+  if (title) title.textContent = zh ? '账户管理' : 'Account Hub';
+  const btnCI = document.getElementById('btnCheckinAll');
+  if (btnCI) btnCI.textContent = '🎁 ' + (zh ? '全部签到' : 'Check-in All');
+  const btnBal = document.getElementById('btnRefreshBal');
+  if (btnBal) btnBal.textContent = '💰 ' + (zh ? '刷新余额' : 'Refresh Balance');
+  const btnAdd = document.getElementById('btnAddAccount');
+  if (btnAdd) btnAdd.textContent = '+ ' + (zh ? '新增账户' : 'Add Account');
+
+  const d = await api('GET', '/admin/accounts');
+  if (d.error) { toast(d.error, 'red'); return; }
+  _accountsCache = d.accounts || [];
+  renderAccountCards(_accountsCache);
+}
+
+function renderAccountCards(accts) {
+  const zh = curLang === 'zh';
+  const container = document.getElementById('accountCards');
+  if (!container) return;
+
+  if (!accts.length) {
+    container.innerHTML = `<div class="text-center py-12" style="grid-column:1/-1;color:var(--text3);">
+      <div class="text-3xl mb-3">📭</div>
+      <div class="text-sm">${zh ? '暂无账户，点击「+ 新增账户」添加站点登录信息' : 'No accounts. Click "+ Add Account" to add site credentials.'}</div>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = accts.map(a => {
+    const color = a.color || '#6366f1';
+    const domain = (() => { try { return new URL(a.siteUrl).hostname; } catch { return a.siteUrl; } })();
+    const pf = PLATFORM_LABELS[a.platform] || PLATFORM_LABELS['unknown'];
+
+    // Platform badge
+    const platformBadge = `<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;background:${pf.color}22;color:${pf.color};border:1px solid ${pf.color}44;">${pf.icon} ${pf.label}</span>`;
+
+    // Balance
+    const bal = a.lastBalance;
+    const canQueryBal = a.platform === 'new-api' || a.platform === 'sub2api';
+    let balHtml = `<span style="color:var(--text3);font-size:12px;">${canQueryBal ? (zh ? '未查询' : 'Not queried') : (zh ? '不支持' : 'N/A')}</span>`;
+    if (bal && bal.ok) {
+      const used = bal.used || 0;
+      const total = bal.total || 0;
+      const remaining = bal.remaining ?? (total - used);
+      const usedPct = total > 0 ? Math.min(Math.round(used / total * 100), 100) : (used > 0 ? 100 : 0);
+      const barColor = usedPct > 90 ? '#ef4444' : usedPct > 70 ? '#f59e0b' : '#22c55e';
+      const timeAgo = bal.queriedAt ? _timeAgo(bal.queriedAt) : '';
+      const mainLabel = `$${remaining.toFixed(2)}`;
+      const mainColor = remaining < 0 ? '#f59e0b' : 'var(--text)';
+      const subLabel = `/ $${total.toFixed(2)}`;
+      balHtml = `
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:16px;font-weight:700;color:${mainColor};">${mainLabel}</span>
+          <span style="font-size:11px;color:var(--text3);">${subLabel}</span>
+          ${timeAgo ? `<span style="font-size:10px;color:var(--text3);margin-left:auto;">${timeAgo}</span>` : ''}
+        </div>
+        <div style="height:4px;background:var(--bg2);border-radius:2px;margin-top:4px;">
+          <div style="height:100%;width:${usedPct}%;background:${barColor};border-radius:2px;transition:width .3s;"></div>
+        </div>`;
+    }
+
+    // Check-in info
+    const checkinTime = a.lastCheckin ? new Date(a.lastCheckin).toLocaleString() : (zh ? '未签到' : 'Never');
+
+    // Login status
+    const loginOk = a.sessionToken === '***';
+    const loginDot = loginOk
+      ? `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;" title="${zh ? '已登录' : 'Logged in'}"></span>`
+      : `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;" title="${zh ? '未登录' : 'Not logged in'}"></span>`;
+
+    // Action buttons — check-in only for New-API; balance + login for New-API and Sub2API
+    const supportsAuth = a.platform === 'new-api' || a.platform === 'sub2api';
+    const checkinBtn = a.platform === 'new-api'
+      ? `<button class="btn btn-ghost btn-xs" onclick="accountCheckin(${a.id})" title="${zh ? '签到' : 'Check-in'}">🎁</button>`
+      : '';
+    const balanceBtn = supportsAuth
+      ? `<button class="btn btn-ghost btn-xs" onclick="accountRefreshBalance(${a.id})" title="${zh ? '余额' : 'Balance'}">💰</button>`
+      : '';
+    const loginBtn = supportsAuth
+      ? `<button class="btn btn-ghost btn-xs" onclick="accountReLogin(${a.id})" title="${zh ? '重新登录' : 'Re-login'}">🔑</button>`
+      : '';
+
+    return `
+    <div class="card" style="padding:0;overflow:hidden;position:relative;" data-account-id="${a.id}">
+      <div style="height:4px;background:${color};"></div>
+      <div style="padding:16px;">
+        <!-- Header -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            ${loginDot}
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--text);">${esc(a.siteLabel || domain)}</div>
+              <div style="font-size:11px;color:var(--text3);">${esc(domain)}</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:4px;">
+            <button class="btn btn-ghost btn-xs" onclick="editAccountMeta(${a.id})" title="${zh ? '编辑' : 'Edit'}">✏️</button>
+            ${loginBtn}${checkinBtn}${balanceBtn}
+            <button class="btn btn-ghost btn-xs" onclick="deleteAccount(${a.id})" title="${zh ? '删除' : 'Delete'}" style="color:#ef4444;">🗑️</button>
+          </div>
+        </div>
+
+        <!-- Platform + User -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          ${platformBadge}
+          <span style="font-size:11px;color:var(--text2);">👤 ${esc(a.username || '')}</span>
+        </div>
+
+        <!-- Balance -->
+        <div style="margin-bottom:10px;" id="acctBal_${a.id}">
+          ${balHtml}
+        </div>
+
+        <!-- Site URL -->
+        <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg2);border-radius:8px;margin-bottom:8px;">
+          <span style="font-size:11px;font-family:monospace;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(a.siteUrl)}</span>
+          <button class="btn btn-ghost btn-xs" onclick="copyText('${esc(a.siteUrl)}')" style="padding:2px 6px;font-size:11px;">📋</button>
+        </div>
+
+        <!-- Footer -->
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text3);">
+          <span>${a.autoCheckin ? '🔄 ' : ''}${zh ? '签到' : 'Check-in'}: ${checkinTime}</span>
+          ${a.channelId ? `<span>🔗 CH#${a.channelId}</span>` : ''}
+        </div>
+
+        ${a.notes ? `<div style="margin-top:6px;padding:6px 8px;background:var(--bg2);border-radius:6px;font-size:11px;color:var(--text3);line-height:1.4;">${esc(a.notes)}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function _timeAgo(ts) {
+  const diff = Date.now() - ts;
+  const zh = curLang === 'zh';
+  if (diff < 60000) return zh ? '刚刚' : 'just now';
+  if (diff < 3600000) return Math.floor(diff/60000) + (zh ? '分钟前' : 'm ago');
+  if (diff < 86400000) return Math.floor(diff/3600000) + (zh ? '小时前' : 'h ago');
+  return Math.floor(diff/86400000) + (zh ? '天前' : 'd ago');
+}
+
+async function accountCheckin(id) {
+  const zh = curLang === 'zh';
+  toast(zh ? '签到中...' : 'Checking in...', 'blue');
+  const d = await api('POST', `/admin/accounts/${id}/checkin`);
+  if (d.ok) {
+    toast(d.message || (zh ? '签到成功' : 'Check-in successful'), 'green');
+  } else {
+    toast(d.error || (zh ? '签到失败' : 'Check-in failed'), 'red');
+  }
+  loadAccounts();
+}
+
+async function accountRefreshBalance(id) {
+  const zh = curLang === 'zh';
+  const el = document.getElementById('acctBal_' + id);
+  if (el) el.innerHTML = `<span style="color:var(--text3);font-size:12px;">⏳ ${zh ? '查询中...' : 'Loading...'}</span>`;
+  const d = await api('GET', `/admin/accounts/${id}/balance`);
+  if (d.ok) {
+    toast(zh ? '余额已更新' : 'Balance updated', 'green');
+  } else {
+    toast(d.error || (zh ? '余额查询失败' : 'Balance query failed'), 'red');
+  }
+  loadAccounts();
+}
+
+async function accountReLogin(id) {
+  const zh = curLang === 'zh';
+  toast(zh ? '登录中...' : 'Logging in...', 'blue');
+  const d = await api('POST', `/admin/accounts/${id}/login`);
+  if (d.ok) {
+    toast(zh ? '登录成功' : 'Login successful', 'green');
+  } else {
+    toast(d.error || (zh ? '登录失败' : 'Login failed'), 'red');
+  }
+  loadAccounts();
+}
+
+async function checkinAll() {
+  const zh = curLang === 'zh';
+  const btn = document.getElementById('btnCheckinAll');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ ...'; }
+  try {
+    const d = await api('POST', '/admin/accounts/checkin-all');
+    if (d.error) { toast(d.error, 'red'); return; }
+    toast(zh ? `签到完成 (${d.ok}/${d.total})` : `Check-in done (${d.ok}/${d.total})`, d.ok > 0 ? 'green' : 'amber');
+    loadAccounts();
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🎁 ' + (zh ? '全部签到' : 'Check-in All'); }
+  }
+}
+
+async function refreshAllBalances() {
+  const zh = curLang === 'zh';
+  const btn = document.getElementById('btnRefreshBal');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ ...'; }
+  try {
+    const newApiAccts = _accountsCache.filter(a => a.platform === 'new-api');
+    let ok = 0;
+    for (const a of newApiAccts) {
+      const d = await api('GET', `/admin/accounts/${a.id}/balance`);
+      if (d.ok) ok++;
+    }
+    toast(zh ? `余额刷新完成 (${ok}/${newApiAccts.length})` : `Balance refreshed (${ok}/${newApiAccts.length})`, 'green');
+    loadAccounts();
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '💰 ' + (zh ? '刷新余额' : 'Refresh Balance'); }
+  }
+}
+
+function editAccountMeta(id) {
+  const zh = curLang === 'zh';
+  const acct = _accountsCache.find(a => a.id === id);
+  if (!acct) return;
+  const COLORS = ['#6366f1','#f59e0b','#22c55e','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316'];
+  const colorPicker = COLORS.map(c =>
+    `<span onclick="document.getElementById('meta_color').value='${c}';document.querySelectorAll('.cpick').forEach(s=>s.style.outline='none');this.style.outline='2px solid var(--text)'" class="cpick" style="display:inline-block;width:22px;height:22px;border-radius:50%;background:${c};cursor:pointer;${acct.color===c?'outline:2px solid var(--text)':''}"></span>`
+  ).join('');
+
+  showModal(zh ? '编辑账户信息' : 'Edit Account', `
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div>
+        <label class="text-xs" style="color:var(--text3);">${zh ? '站点名称' : 'Site Label'}</label>
+        <input id="meta_label" value="${esc(acct.siteLabel || '')}">
+      </div>
+      <div>
+        <label class="text-xs" style="color:var(--text3);">${zh ? '标识颜色' : 'Color'}</label>
+        <input id="meta_color" type="hidden" value="${acct.color || '#6366f1'}">
+        <div style="display:flex;gap:6px;margin-top:4px;">${colorPicker}</div>
+      </div>
+      <div>
+        <label class="text-xs" style="color:var(--text3);">${zh ? '备注' : 'Notes'}</label>
+        <textarea id="meta_notes" rows="2" style="resize:vertical;">${esc(acct.notes || '')}</textarea>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="meta_autoCheckin" ${acct.autoCheckin ? 'checked' : ''} ${acct.platform !== 'new-api' ? 'disabled' : ''}>
+        <label for="meta_autoCheckin" class="text-xs" style="color:var(--text2);">${zh ? '自动签到' : 'Auto check-in'}${acct.platform !== 'new-api' ? ` (${zh ? '仅 New-API' : 'New-API only'})` : ''}</label>
+      </div>
+      <button class="btn btn-primary w-full" onclick="saveAccountMeta(${id})">${zh ? '保存' : 'Save'}</button>
+    </div>
+  `);
+}
+
+async function saveAccountMeta(id) {
+  const d = await api('PUT', `/admin/accounts/${id}`, {
+    siteLabel: document.getElementById('meta_label').value.trim(),
+    color: document.getElementById('meta_color').value,
+    notes: document.getElementById('meta_notes').value.trim(),
+    autoCheckin: document.getElementById('meta_autoCheckin').checked,
+  });
+  if (d.error) { toast(d.error, 'red'); return; }
+  toast(curLang === 'zh' ? '已保存' : 'Saved', 'green');
+  closeModal();
+  loadAccounts();
+}
+
+async function deleteAccount(id) {
+  const zh = curLang === 'zh';
+  if (!confirm(zh ? '确认删除此账户？' : 'Delete this account?')) return;
+  const d = await api('DELETE', `/admin/accounts/${id}`);
+  if (d.error) { toast(d.error, 'red'); return; }
+  toast(zh ? '已删除' : 'Deleted', 'green');
+  loadAccounts();
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(
+    () => toast(curLang === 'zh' ? '已复制' : 'Copied', 'green'),
+    () => toast(curLang === 'zh' ? '复制失败' : 'Copy failed', 'red')
+  );
+}
+
+function openAddAccount() {
+  const zh = curLang === 'zh';
+  const COLORS = ['#6366f1','#f59e0b','#22c55e','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316'];
+  const colorPicker = COLORS.map((c, i) =>
+    `<span onclick="document.getElementById('add_color').value='${c}';document.querySelectorAll('.cpick-add').forEach(s=>s.style.outline='none');this.style.outline='2px solid var(--text)'" class="cpick-add" style="display:inline-block;width:22px;height:22px;border-radius:50%;background:${c};cursor:pointer;${i===0?'outline:2px solid var(--text)':''}"></span>`
+  ).join('');
+
+  showModal(zh ? '新增账户' : 'Add Account', `
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div>
+        <label class="text-xs" style="color:var(--text3);">${zh ? '站点地址 *' : 'Site URL *'}</label>
+        <input id="add_siteUrl" placeholder="https://api.example.com">
+      </div>
+      <div>
+        <label class="text-xs" style="color:var(--text3);">${zh ? '用户名 / 邮箱 *' : 'Username / Email *'}</label>
+        <input id="add_username" placeholder="${zh ? '登录账号' : 'Login username'}">
+      </div>
+      <div>
+        <label class="text-xs" style="color:var(--text3);">${zh ? '密码 *' : 'Password *'}</label>
+        <input id="add_password" type="password" placeholder="${zh ? '登录密码' : 'Login password'}">
+      </div>
+      <div>
+        <label class="text-xs" style="color:var(--text3);">${zh ? '站点名称（可选）' : 'Site Label (optional)'}</label>
+        <input id="add_label" placeholder="${zh ? '如：七行AI' : 'e.g. MyStation'}">
+      </div>
+      <div>
+        <label class="text-xs" style="color:var(--text3);">${zh ? '标识颜色' : 'Color'}</label>
+        <input id="add_color" type="hidden" value="#6366f1">
+        <div style="display:flex;gap:6px;margin-top:4px;">${colorPicker}</div>
+      </div>
+      <div>
+        <label class="text-xs" style="color:var(--text3);">${zh ? '备注' : 'Notes'}</label>
+        <textarea id="add_notes" rows="2" style="resize:vertical;" placeholder="${zh ? '可选' : 'Optional'}"></textarea>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="add_autoCheckin" checked>
+        <label for="add_autoCheckin" class="text-xs" style="color:var(--text2);">${zh ? '启用自动签到（仅 New-API）' : 'Enable auto check-in (New-API only)'}</label>
+      </div>
+      <div style="padding:8px;background:var(--bg2);border-radius:8px;font-size:11px;color:var(--text3);line-height:1.5;">
+        💡 ${zh ? '系统将自动检测平台类型（New-API / Sub2API），并尝试登录获取余额信息。' : 'Platform type (New-API / Sub2API) will be auto-detected. Login will be attempted automatically.'}
+      </div>
+      <button class="btn btn-primary w-full" onclick="submitAddAccount()" id="btnSubmitAdd">${zh ? '添加' : 'Add'}</button>
+    </div>
+  `);
+}
+
+async function submitAddAccount() {
+  const zh = curLang === 'zh';
+  const siteUrl = document.getElementById('add_siteUrl').value.trim();
+  const username = document.getElementById('add_username').value.trim();
+  const password = document.getElementById('add_password').value.trim();
+  if (!siteUrl || !username || !password) {
+    toast(zh ? '请填写站点地址、用户名和密码' : 'Site URL, username and password are required', 'red');
+    return;
+  }
+
+  const btn = document.getElementById('btnSubmitAdd');
+  if (btn) { btn.disabled = true; btn.textContent = zh ? '⏳ 检测中...' : '⏳ Detecting...'; }
+
+  const d = await api('POST', '/admin/accounts', {
+    siteUrl,
+    username,
+    password,
+    siteLabel: document.getElementById('add_label').value.trim() || undefined,
+    color: document.getElementById('add_color').value,
+    notes: document.getElementById('add_notes').value.trim(),
+    autoCheckin: document.getElementById('add_autoCheckin').checked,
+  });
+
+  if (btn) { btn.disabled = false; btn.textContent = zh ? '添加' : 'Add'; }
+
+  if (d.error) { toast(d.error, 'red'); return; }
+
+  const pf = PLATFORM_LABELS[d.platform] || PLATFORM_LABELS['unknown'];
+  const loginMsg = d.loginOk ? (zh ? '，登录成功' : ', login OK') : (zh ? '，登录失败' : ', login failed');
+  toast(`${zh ? '账户已添加' : 'Account added'} — ${pf.icon} ${pf.label}${d.platform === 'new-api' ? loginMsg : ''}`, d.loginOk ? 'green' : 'amber');
+  closeModal();
+  loadAccounts();
 }
 </script>
 </body>
